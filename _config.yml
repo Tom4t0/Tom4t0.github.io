@@ -10,7 +10,7 @@ gems: [jekyll-paginate]
 
 # Setup
 
-title:          "Tomato's Blog'"
+title:          "Tomato's Blog"
 tagline:        "Quiet And Powerful"
 description:    "Something Specail"
 url:            "http://bl4ck.in"
