@@ -11,8 +11,7 @@ title: "Home"
         {% if post.layout == "post" %}
         <li>
           <h3>
-            <span>{{ post.date | date: "%Y-%m-%d" }}</span>
-            <a href="{{ post.url }}">{{ post.title }}</a>
+            <span>{{ post.date | date: "%Y %b %d" }}</span>- <a href="{{ post.url }}">{{ post.title }}</a>
           </h3>
         </li>
         {% endif %}

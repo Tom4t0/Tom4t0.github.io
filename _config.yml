@@ -4,33 +4,36 @@
 # permalink:           pretty
 # relative_permalinks: true
 
+
+gems: [jekyll-paginate]
+
+
 # Setup
 
-title:          "rickgray.me"
+title:          "Tomato's Blog'"
 tagline:        "Quiet And Powerful"
 description:    "Something Specail"
-url:            "http://rickgray.me"
+url:            "http://bl4ck.in"
 baseurl:        ""
-paginate:       18  
+paginate:       20
 paginate_path:  "/page:num"
 
-# Set your friends info
+# Custom vars
 friends:
-    - name: "Friend-One"
-      url: "#"
-      desc: "Description"
-    - name: "Friend-Two"
-      url: "#"
-      desc: "Description"
+    - name: "Syclover"
+      url: "http://blog.sycsec.com"
+      desc: "三叶草安全小组"
 
 author:
-    name: "RickGray"
-    url: "set plz"
-    email: "set plz"
-    weibo: "set plz"
-    github: "set plz"
+    name: "Tomato"
+    email: "0xtom4to@gmail.com"
+    weibo: "http://weibo.com/tomato4web"
+    twitter: ""
+    github: ""
 
-# Set your Disqus shortname here
 disqus:
-    shortname: "set plz"
-    show: True
+    shortname: ""
+    show: False
+
+
+markdown: kramdown
