@@ -8,7 +8,7 @@ title: "Friends"
     <div class="lp-friends-list">
       <ul>
         {% for friend in site.friends %}
-        <li><h3><a href="{{ friend.url }}">{{ friend.name }}{% if friend.desc %} ({{ friend.desc }}){% endif %}</a></h3></li>
+        <li><h3><a href="{{ friend.url }}">{{ friend.name }}{% if friend.desc %} {{ friend.desc }}{% endif %}</a></h3></li>
         {% endfor %}
       </ul>
     </div>

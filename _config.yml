@@ -23,6 +23,9 @@ friends:
     - name: "Syclover"
       url: "http://blog.sycsec.com"
       desc: "三叶草安全小组"
+    - name: "小鹿"
+      url: "http://blog.th3s3v3n.xyz/"
+      desc: "小鹿师傅"
 
 author:
     name: "Tomato"
