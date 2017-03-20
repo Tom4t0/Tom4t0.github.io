@@ -23,9 +23,12 @@ friends:
     - name: "Syclover"
       url: "http://blog.sycsec.com"
       desc: "三叶草安全小组"
-    - name: "小鹿"
+    - name: "小鹿师傅"
       url: "http://blog.th3s3v3n.xyz/"
-      desc: "小鹿师傅"
+      desc: "回车日站大佬"
+    - name: "AppleU0"
+      url: "http://Appleu0.sinaapp.com"
+      desc: "阿里的大佬"
 
 author:
     name: "Tomato"
@@ -35,7 +38,7 @@ author:
     github: ""
 
 disqus:
-    shortname: ""
+    shortname: "bl4ck"
     show: False
 
 
