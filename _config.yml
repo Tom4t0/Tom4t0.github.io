@@ -1,0 +1,36 @@
+# Permalinks
+#
+# Use of `relative_permalinks` ensures post links from the index work properly.
+# permalink:           pretty
+# relative_permalinks: true
+
+# Setup
+
+title:          "rickgray.me"
+tagline:        "Quiet And Powerful"
+description:    "Something Specail"
+url:            "http://rickgray.me"
+baseurl:        ""
+paginate:       18  
+paginate_path:  "/page:num"
+
+# Set your friends info
+friends:
+    - name: "Friend-One"
+      url: "#"
+      desc: "Description"
+    - name: "Friend-Two"
+      url: "#"
+      desc: "Description"
+
+author:
+    name: "RickGray"
+    url: "set plz"
+    email: "set plz"
+    weibo: "set plz"
+    github: "set plz"
+
+# Set your Disqus shortname here
+disqus:
+    shortname: "set plz"
+    show: True

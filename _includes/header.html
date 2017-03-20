@@ -1,0 +1,16 @@
+<div class="am-container lp-container">
+  <header class="am-topbar lp-topbar">
+    <h1 class="am-topbar-brand">
+      <a href="/">{% if site.title %}{{ site.title }}{% else %}LightPost{% endif %}</a>
+    </h1>
+    <button class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-danger am-show-sm-only" data-am-collapse="{target: '#lp-topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></button>
+    <div class="am-collapse am-topbar-collapse am-topbar-right" id="lp-topbar-collapse">
+      <ul class="am-nav am-nav-pills am-topbar-nav">
+        <li><a href="/">Archives</a></li>
+        <li><a href="#">Categories</a></li>
+        <li><a href="/friends.html">Friends</a></li>
+        <li><a href="#">About Me</a></li>
+      </ul>
+    </div>
+  </header>
+</div>
