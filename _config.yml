@@ -29,6 +29,9 @@ friends:
     - name: "AppleU0"
       url: "http://Appleu0.sinaapp.com"
       desc: "阿里的大佬"
+    - name: "雨了个雨"
+      url: "http://www.yulegeyu.com/"
+      desc: "雨儿子"
 
 author:
     name: "Tomato"
