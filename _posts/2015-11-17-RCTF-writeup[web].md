@@ -2,10 +2,12 @@
 layout: post
 title: RCTF-writeup[web]
 tags: [writeup]
+categories: writeup
 date: 2015-11-17 09:34:39
 ---
 
 **upload**
+
 看起来是一个上传题，其实这是一个注入题。在文件名的地方存在注入。因为注入点是insert的，如果直接进行报错注入或者延时注入的话会提示sqlinject find。我们可以利用二次注入，来得到数据。通过fuzz发现，在进行insert操作的时候有三个列，所以构造
 
 ```
@@ -25,6 +27,7 @@ date: 2015-11-17 09:34:39
 
 
 **xss**
+
 这是一个留言板，通过fuzz发现过滤了很多标签，除此之外还把on事件直接给过滤了。后面测试发现可以使用link标签，然后使用sctf里面那种方法就可以弹框了。
 
 ```
@@ -70,6 +73,7 @@ $.ajax({
 
 
 **easysql**
+
 注册一个aaa\然后在修改密码的页面可以发现报错
 
 ![easysql-1.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2913177276.jpg)
@@ -93,6 +97,7 @@ username=tomato"||updatexml(0x7c,concat((select(real_flag_1s_here)from(users)whe
 
 
 **login**
+
 第二天给了提示说是nosql，那就猜是mongodb
 ![login-1.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3330162428.jpg)
 
@@ -162,17 +167,5 @@ shell地址就是
 http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/382aef24b11f8c5222bc58062a9bf5c7.php
 
 
-  [1]: http://bl4ck.in/usr/uploads/2015/11/1170534972.jpg
-  [2]: http://bl4ck.in/usr/uploads/2015/11/545225687.jpg
-  [3]: http://bl4ck.in/usr/uploads/2015/11/2913177276.jpg
-  [4]: http://bl4ck.in/usr/uploads/2015/11/157009057.jpg
-  [5]: http://bl4ck.in/usr/uploads/2015/11/3268258668.jpg
-  [6]: http://bl4ck.in/usr/uploads/2015/11/1387239513.jpg
-  [7]: http://bl4ck.in/usr/uploads/2015/11/3330162428.jpg
-  [8]: http://bl4ck.in/usr/uploads/2015/11/3255963769.jpg
-  [9]: http://bl4ck.in/usr/uploads/2015/11/460039838.jpg
-  [10]: http://bl4ck.in/usr/uploads/2015/11/1149569489.jpg
-  [11]: http://bl4ck.in/usr/uploads/2015/11/2664205826.jpg
-  [12]: http://bl4ck.in/usr/uploads/2015/11/2009859300.jpg
-  [13]: http://bl4ck.in/usr/uploads/2015/11/2977300730.jpg
+  
 

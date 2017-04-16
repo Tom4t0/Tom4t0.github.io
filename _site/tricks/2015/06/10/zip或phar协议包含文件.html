@@ -60,8 +60,9 @@
 </div>
 <p>上面的代码一个验证了后缀是否为jpg，一个是直接添加了jpg后缀，然后才包含。对于现在这种情况，要包含php文件的话的，可以通过截断。但是\x00的截断在php&gt;5.3.4就没用了，而且还要考虑GPC,所以是比较鸡肋的方法。其实我们可以通过zip协议和phar协议来包含文件。</p>
 
-<p><strong>zip://</strong>
-首先我们新建一个zip文件，里面压缩着一个php脚本。</p>
+<p><strong>zip://</strong></p>
+
+<p>首先我们新建一个zip文件，里面压缩着一个php脚本。</p>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2355213942.png" alt="2355213942" /></p>
 
@@ -73,8 +74,9 @@
 
 <p>这样就成功shell了。</p>
 
-<p><strong>phar://</strong>
-首先我们要用phar类打包一个phar标准包</p>
+<p><strong>phar://</strong></p>
+
+<p>首先我们要用phar类打包一个phar标准包</p>
 
 <div class="language-php highlighter-rouge"><pre class="highlight"><code><span class="cp">&lt;?php</span>
 <span class="nv">$p</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">PharData</span><span class="p">(</span><span class="nb">dirname</span><span class="p">(</span><span class="k">__FILE__</span><span class="p">)</span><span class="o">.</span><span class="s1">'/phartest2.zip'</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="s1">'phartest2'</span><span class="p">,</span><span class="nx">Phar</span><span class="o">::</span><span class="na">ZIP</span><span class="p">)</span> <span class="p">;</span> 

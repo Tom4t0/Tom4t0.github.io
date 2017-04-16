@@ -41,8 +41,9 @@
       </div>
     </div>
     <div class="lp-post-content">
-    <p><strong>upload</strong>
-看起来是一个上传题，其实这是一个注入题。在文件名的地方存在注入。因为注入点是insert的，如果直接进行报错注入或者延时注入的话会提示sqlinject find。我们可以利用二次注入，来得到数据。通过fuzz发现，在进行insert操作的时候有三个列，所以构造</p>
+    <p><strong>upload</strong></p>
+
+<p>看起来是一个上传题，其实这是一个注入题。在文件名的地方存在注入。因为注入点是insert的，如果直接进行报错注入或者延时注入的话会提示sqlinject find。我们可以利用二次注入，来得到数据。通过fuzz发现，在进行insert操作的时候有三个列，所以构造</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>文件名','uid','uid'),((database()),'uid','uid')#.jpg
 </code></pre>
@@ -58,8 +59,9 @@
 </div>
 <p>把后缀改为php5 就成功拿到了flag。</p>
 
-<p><strong>xss</strong>
-这是一个留言板，通过fuzz发现过滤了很多标签，除此之外还把on事件直接给过滤了。后面测试发现可以使用link标签，然后使用sctf里面那种方法就可以弹框了。</p>
+<p><strong>xss</strong></p>
+
+<p>这是一个留言板，通过fuzz发现过滤了很多标签，除此之外还把on事件直接给过滤了。后面测试发现可以使用link标签，然后使用sctf里面那种方法就可以弹框了。</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>&lt;link rel="import" href="data:text/html;base64,PHNjcmlwdD5kZWxldGUgYWxlcnQ7YWxlcnQoIkhlbGxvIik7PC9zY3JpcHQ+"&gt;
 </code></pre>
@@ -102,8 +104,9 @@ password:&lt;input type="password" name="pass"&gt;&lt;br /&gt;
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-545225687.jpg" alt="xss－2.jpg" /></p>
 
-<p><strong>easysql</strong>
-注册一个aaa\然后在修改密码的页面可以发现报错</p>
+<p><strong>easysql</strong></p>
+
+<p>注册一个aaa\然后在修改密码的页面可以发现报错</p>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2913177276.jpg" alt="easysql-1.jpg" /></p>
 
@@ -124,8 +127,9 @@ password:&lt;input type="password" name="pass"&gt;&lt;br /&gt;
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1387239513.jpg" alt="easysql－4.jpg" /></p>
 
-<p><strong>login</strong>
-第二天给了提示说是nosql，那就猜是mongodb</p>
+<p><strong>login</strong></p>
+
+<p>第二天给了提示说是nosql，那就猜是mongodb</p>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3330162428.jpg" alt="login-1.jpg" /></p>
 

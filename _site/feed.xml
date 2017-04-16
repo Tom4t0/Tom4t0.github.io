@@ -5,8 +5,8 @@
     <description>Something Specail</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Mon, 17 Apr 2017 01:38:55 +0800</pubDate>
-    <lastBuildDate>Mon, 17 Apr 2017 01:38:55 +0800</lastBuildDate>
+    <pubDate>Mon, 17 Apr 2017 01:51:04 +0800</pubDate>
+    <lastBuildDate>Mon, 17 Apr 2017 01:51:04 +0800</lastBuildDate>
     <generator>Jekyll v3.4.2</generator>
     
       <item>
@@ -280,11 +280,13 @@ impacket&lt;/p&gt;
 
 </description>
         <pubDate>Mon, 20 Mar 2017 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2017/03/20/windows%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E6%9D%82%E8%B0%88.html</link>
-        <guid isPermaLink="true">http://localhost:4000/2017/03/20/windows%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E6%9D%82%E8%B0%88.html</guid>
+        <link>http://localhost:4000/penetration/2017/03/20/windows%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E6%9D%82%E8%B0%88.html</link>
+        <guid isPermaLink="true">http://localhost:4000/penetration/2017/03/20/windows%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E6%9D%82%E8%B0%88.html</guid>
         
-        <category>pentest</category>
+        <category>penetration</category>
         
+        
+        <category>penetration</category>
         
       </item>
     
@@ -292,7 +294,7 @@ impacket&lt;/p&gt;
         <title>通过DNS协议绕过防火墙</title>
         <description>&lt;p&gt;工具&lt;/p&gt;
 
-&lt;p&gt;[https://github.com/iagox86/dnscat2][1]&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/iagox86/dnscat2&quot;&gt;https://github.com/iagox86/dnscat2&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;测试环境&lt;/p&gt;
 
@@ -387,9 +389,11 @@ listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4
 
 &lt;p&gt;注意的是我用的docker环境，所以是直接ssh的docker的ip&lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;0x03参考&lt;/strong&gt;
-&lt;a href=&quot;https://github.com/iagox86/dnscat2/&quot;&gt;https://github.com/iagox86/dnscat2&lt;/a&gt;
-&lt;a href=&quot;https://zeltser.com/c2-dns-tunneling/&quot;&gt;https://zeltser.com/c2-dns-tunneling/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;0x03参考&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/iagox86/dnscat2&quot;&gt;https://github.com/iagox86/dnscat2&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://zeltser.com/c2-dns-tunneling/&quot;&gt;https://zeltser.com/c2-dns-tunneling/&lt;/a&gt;&lt;/p&gt;
 
 </description>
         <pubDate>Fri, 03 Jun 2016 00:00:00 +0800</pubDate>
@@ -405,8 +409,9 @@ listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4
     
       <item>
         <title>RCTF-writeup[web]</title>
-        <description>&lt;p&gt;&lt;strong&gt;upload&lt;/strong&gt;
-看起来是一个上传题，其实这是一个注入题。在文件名的地方存在注入。因为注入点是insert的，如果直接进行报错注入或者延时注入的话会提示sqlinject find。我们可以利用二次注入，来得到数据。通过fuzz发现，在进行insert操作的时候有三个列，所以构造&lt;/p&gt;
+        <description>&lt;p&gt;&lt;strong&gt;upload&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;看起来是一个上传题，其实这是一个注入题。在文件名的地方存在注入。因为注入点是insert的，如果直接进行报错注入或者延时注入的话会提示sqlinject find。我们可以利用二次注入，来得到数据。通过fuzz发现，在进行insert操作的时候有三个列，所以构造&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;文件名','uid','uid'),((database()),'uid','uid')#.jpg
 &lt;/code&gt;&lt;/pre&gt;
@@ -422,8 +427,9 @@ listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4
 &lt;/div&gt;
 &lt;p&gt;把后缀改为php5 就成功拿到了flag。&lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;xss&lt;/strong&gt;
-这是一个留言板，通过fuzz发现过滤了很多标签，除此之外还把on事件直接给过滤了。后面测试发现可以使用link标签，然后使用sctf里面那种方法就可以弹框了。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;xss&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;这是一个留言板，通过fuzz发现过滤了很多标签，除此之外还把on事件直接给过滤了。后面测试发现可以使用link标签，然后使用sctf里面那种方法就可以弹框了。&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;link rel=&quot;import&quot; href=&quot;data:text/html;base64,PHNjcmlwdD5kZWxldGUgYWxlcnQ7YWxlcnQoIkhlbGxvIik7PC9zY3JpcHQ+&quot;&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;
@@ -466,8 +472,9 @@ password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&a
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-545225687.jpg&quot; alt=&quot;xss－2.jpg&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;easysql&lt;/strong&gt;
-注册一个aaa\然后在修改密码的页面可以发现报错&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;easysql&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;注册一个aaa\然后在修改密码的页面可以发现报错&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2913177276.jpg&quot; alt=&quot;easysql-1.jpg&quot; /&gt;&lt;/p&gt;
 
@@ -488,8 +495,9 @@ password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&a
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1387239513.jpg&quot; alt=&quot;easysql－4.jpg&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;login&lt;/strong&gt;
-第二天给了提示说是nosql，那就猜是mongodb&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;login&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;第二天给了提示说是nosql，那就猜是mongodb&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3330162428.jpg&quot; alt=&quot;login-1.jpg&quot; /&gt;&lt;/p&gt;
 
@@ -560,11 +568,13 @@ http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/382aef24
 
 </description>
         <pubDate>Tue, 17 Nov 2015 17:34:39 +0800</pubDate>
-        <link>http://localhost:4000/2015/11/17/RCTF-writeup-web.html</link>
-        <guid isPermaLink="true">http://localhost:4000/2015/11/17/RCTF-writeup-web.html</guid>
+        <link>http://localhost:4000/writeup/2015/11/17/RCTF-writeup-web.html</link>
+        <guid isPermaLink="true">http://localhost:4000/writeup/2015/11/17/RCTF-writeup-web.html</guid>
         
         <category>writeup</category>
         
+        
+        <category>writeup</category>
         
       </item>
     
@@ -593,8 +603,9 @@ http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/382aef24
 
 &lt;hr /&gt;
 
-&lt;p&gt;&lt;strong&gt;获取webshell&lt;/strong&gt;
-条件：知道web绝对路径，redis运行的用户需要对web目录要有写的权限&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;获取webshell&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;条件：知道web绝对路径，redis运行的用户需要对web目录要有写的权限&lt;/p&gt;
 
 &lt;p&gt;http://10.211.55.10/phpinfo.php&lt;/p&gt;
 
@@ -660,8 +671,9 @@ exit
 
 &lt;p&gt;缺点：flushall 太暴力直接清空数据库，覆盖authorized_keys，导致原有的认证失效。&lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;通过redis提权&lt;/strong&gt;
-获取了一个webshell，但是权限很低，发现存在redis服务但是只能本地访问。然后通过上面的方法可以成功提权&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;通过redis提权&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;获取了一个webshell，但是权限很低，发现存在redis服务但是只能本地访问。然后通过上面的方法可以成功提权&lt;/p&gt;
 
 &lt;hr /&gt;
 
@@ -701,11 +713,13 @@ nc -lvv 8443
 
 </description>
         <pubDate>Tue, 17 Nov 2015 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2015/11/17/Redis%E5%AE%89%E5%85%A8%E6%80%BB%E7%BB%93.html</link>
-        <guid isPermaLink="true">http://localhost:4000/2015/11/17/Redis%E5%AE%89%E5%85%A8%E6%80%BB%E7%BB%93.html</guid>
+        <link>http://localhost:4000/categories/2015/11/17/Redis%E5%AE%89%E5%85%A8%E6%80%BB%E7%BB%93.html</link>
+        <guid isPermaLink="true">http://localhost:4000/categories/2015/11/17/Redis%E5%AE%89%E5%85%A8%E6%80%BB%E7%BB%93.html</guid>
         
         <category>penetration</category>
         
+        
+        <category>categories</category>
         
       </item>
     
@@ -1043,13 +1057,15 @@ Apache2.5
 
 </description>
         <pubDate>Thu, 10 Sep 2015 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2015/09/10/Apache%E7%AB%AF%E5%8F%A3%E5%A4%8D%E7%94%A8%E5%90%8E%E9%97%A8.html</link>
-        <guid isPermaLink="true">http://localhost:4000/2015/09/10/Apache%E7%AB%AF%E5%8F%A3%E5%A4%8D%E7%94%A8%E5%90%8E%E9%97%A8.html</guid>
+        <link>http://localhost:4000/penetration/2015/09/10/Apache%E7%AB%AF%E5%8F%A3%E5%A4%8D%E7%94%A8%E5%90%8E%E9%97%A8.html</link>
+        <guid isPermaLink="true">http://localhost:4000/penetration/2015/09/10/Apache%E7%AB%AF%E5%8F%A3%E5%A4%8D%E7%94%A8%E5%90%8E%E9%97%A8.html</guid>
         
         <category>penetration</category>
         
         <category>backdoor</category>
         
+        
+        <category>penetration</category>
         
       </item>
     
@@ -1115,19 +1131,19 @@ DataSources\DataSources.xml
 
 &lt;p&gt;或者使用powershell脚本&lt;/p&gt;
 
-&lt;p&gt;脚本见附件&lt;a href=&quot;http://bl4ck.in/usr/uploads/2015/08/2250856726.zip&quot;&gt;gpp-exploit.zip&lt;/a&gt;&lt;/p&gt;
-
 &lt;p&gt;&lt;strong&gt;防御&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;可以直接设置xml的读取权限，从而防止恶意的读取&lt;/p&gt;
 
 </description>
         <pubDate>Fri, 14 Aug 2015 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2015/08/14/windows2008-GPP%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8.html</link>
-        <guid isPermaLink="true">http://localhost:4000/2015/08/14/windows2008-GPP%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8.html</guid>
+        <link>http://localhost:4000/penetration/2015/08/14/windows2008-GPP%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8.html</link>
+        <guid isPermaLink="true">http://localhost:4000/penetration/2015/08/14/windows2008-GPP%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8.html</guid>
         
         <category>penetration</category>
         
+        
+        <category>penetration</category>
         
       </item>
     
@@ -1576,11 +1592,13 @@ NTU2NJC3ODHHYWJIZ3P4ZWY=
 
 </description>
         <pubDate>Thu, 11 Jun 2015 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2015/06/11/%E7%AC%AC%E4%B8%89%E5%B1%8A-360%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8%E5%A4%A7%E8%B5%9B-writeup.html</link>
-        <guid isPermaLink="true">http://localhost:4000/2015/06/11/%E7%AC%AC%E4%B8%89%E5%B1%8A-360%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8%E5%A4%A7%E8%B5%9B-writeup.html</guid>
+        <link>http://localhost:4000/writeup/2015/06/11/%E7%AC%AC%E4%B8%89%E5%B1%8A-360%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8%E5%A4%A7%E8%B5%9B-writeup.html</link>
+        <guid isPermaLink="true">http://localhost:4000/writeup/2015/06/11/%E7%AC%AC%E4%B8%89%E5%B1%8A-360%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8%E5%A4%A7%E8%B5%9B-writeup.html</guid>
         
         <category>writeup</category>
         
+        
+        <category>writeup</category>
         
       </item>
     
@@ -1605,8 +1623,9 @@ NTU2NJC3ODHHYWJIZ3P4ZWY=
 &lt;/div&gt;
 &lt;p&gt;上面的代码一个验证了后缀是否为jpg，一个是直接添加了jpg后缀，然后才包含。对于现在这种情况，要包含php文件的话的，可以通过截断。但是\x00的截断在php&amp;gt;5.3.4就没用了，而且还要考虑GPC,所以是比较鸡肋的方法。其实我们可以通过zip协议和phar协议来包含文件。&lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;zip://&lt;/strong&gt;
-首先我们新建一个zip文件，里面压缩着一个php脚本。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;zip://&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;首先我们新建一个zip文件，里面压缩着一个php脚本。&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2355213942.png&quot; alt=&quot;2355213942&quot; /&gt;&lt;/p&gt;
 
@@ -1618,8 +1637,9 @@ NTU2NJC3ODHHYWJIZ3P4ZWY=
 
 &lt;p&gt;这样就成功shell了。&lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;phar://&lt;/strong&gt;
-首先我们要用phar类打包一个phar标准包&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;phar://&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;首先我们要用phar类打包一个phar标准包&lt;/p&gt;
 
 &lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;$p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PharData&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;dirname&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;__FILE__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'/phartest2.zip'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'phartest2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Phar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;ZIP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; 
@@ -1642,13 +1662,15 @@ include(一个规定的路径+可控点)&lt;/p&gt;
 
 </description>
         <pubDate>Wed, 10 Jun 2015 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2015/06/10/zip%E6%88%96phar%E5%8D%8F%E8%AE%AE%E5%8C%85%E5%90%AB%E6%96%87%E4%BB%B6.html</link>
-        <guid isPermaLink="true">http://localhost:4000/2015/06/10/zip%E6%88%96phar%E5%8D%8F%E8%AE%AE%E5%8C%85%E5%90%AB%E6%96%87%E4%BB%B6.html</guid>
+        <link>http://localhost:4000/tricks/2015/06/10/zip%E6%88%96phar%E5%8D%8F%E8%AE%AE%E5%8C%85%E5%90%AB%E6%96%87%E4%BB%B6.html</link>
+        <guid isPermaLink="true">http://localhost:4000/tricks/2015/06/10/zip%E6%88%96phar%E5%8D%8F%E8%AE%AE%E5%8C%85%E5%90%AB%E6%96%87%E4%BB%B6.html</guid>
         
         <category>tricks</category>
         
         <category>php</category>
         
+        
+        <category>tricks</category>
         
       </item>
     
