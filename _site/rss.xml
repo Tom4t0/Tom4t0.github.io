@@ -5,8 +5,8 @@
     <description>Something Specail</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Mon, 17 Apr 2017 01:32:11 +0800</pubDate>
-    <lastBuildDate>Mon, 17 Apr 2017 01:32:11 +0800</lastBuildDate>
+    <pubDate>Mon, 17 Apr 2017 01:38:55 +0800</pubDate>
+    <lastBuildDate>Mon, 17 Apr 2017 01:38:55 +0800</lastBuildDate>
     <generator>Jekyll v3.4.2</generator>
     
       <item>
@@ -532,8 +532,7 @@ if (pbkdf2($alg, $Agent, $salt, $iterations, $keylen) != pbkdf2($alg, $backDoor,
 &lt;p&gt;测试发现直接上传zip提示没有权限，然后只有过了上面三个条件才行。主要是第三个条件不好过，然后google一发
 pdkdf2 ctf&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://bl4ck.in/usr/uploads/2015/11/2664205826.jpg&quot; alt=&quot;login－5.jpg&quot; /&gt;
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2664205826.jpg&quot; alt=&quot;2664205826&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2664205826.jpg&quot; alt=&quot;2664205826&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;找到了这个 PBKDF2+HMAC collision
 然后在https://mathiasbynens.be/notes/pbkdf2-hmac
@@ -546,8 +545,7 @@ pdkdf2 ctf&lt;/p&gt;
 &lt;/div&gt;
 &lt;p&gt;然后改一下ua，在cookie里面添加backdoor就可以成功上传了。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://bl4ck.in/usr/uploads/2015/11/2009859300.jpg&quot; alt=&quot;login－6.jpg&quot; /&gt;
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2009859300.jpg&quot; alt=&quot;2009859300&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2009859300.jpg&quot; alt=&quot;2009859300&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;按照解压出来的文件的命名规则为md5(文件名＋RoisFighting).文件的后缀
 但是访问http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/051ee28a1964f9f2779d32f2e48212cb/70d08f9380da3a6e0440b3266a2a39f6.php
@@ -1610,8 +1608,9 @@ NTU2NJC3ODHHYWJIZ3P4ZWY=
 &lt;p&gt;&lt;strong&gt;zip://&lt;/strong&gt;
 首先我们新建一个zip文件，里面压缩着一个php脚本。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/Users/Tomato/Documents/blog_backup/usr/uploads/2015/06/2355213942.png&quot; alt=&quot;1.png&quot; /&gt;
-然后我们构造zip://php.zip#php.jpg&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2355213942.png&quot; alt=&quot;2355213942&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后我们构造zip://php.zip#php.jpg&lt;/p&gt;
 
 &lt;p&gt;http://127.0.0.1/file.php?file=zip://php.zip%23php.jpg&lt;/p&gt;
 

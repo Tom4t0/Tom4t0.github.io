@@ -134,7 +134,7 @@ if (pbkdf2($alg, $Agent, $salt, $iterations, $keylen) != pbkdf2($alg, $backDoor,
 测试发现直接上传zip提示没有权限，然后只有过了上面三个条件才行。主要是第三个条件不好过，然后google一发
 pdkdf2 ctf 
 
-![login－5.jpg][11]![2664205826](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2664205826.jpg)
+![2664205826](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2664205826.jpg)
 
 找到了这个 PBKDF2+HMAC collision
 然后在https://mathiasbynens.be/notes/pbkdf2-hmac
@@ -147,7 +147,7 @@ rois_special_user_agentaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamipvkd
 ```
 然后改一下ua，在cookie里面添加backdoor就可以成功上传了。
 
-![login－6.jpg][12]![2009859300](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2009859300.jpg)
+![2009859300](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2009859300.jpg)
 
 按照解压出来的文件的命名规则为md5(文件名＋RoisFighting).文件的后缀
 但是访问http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/051ee28a1964f9f2779d32f2e48212cb/70d08f9380da3a6e0440b3266a2a39f6.php![2977300730](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2977300730.jpg)
