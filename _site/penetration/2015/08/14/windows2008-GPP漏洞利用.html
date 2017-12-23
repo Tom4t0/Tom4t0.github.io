@@ -43,10 +43,9 @@
     <div class="lp-post-content">
     <p>测试环境</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>windows7 普通域成员
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>windows7 普通域成员
 windows2008 域控
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>首先部署GPP，这里我部署的策略是给域成员都添加一个test用户，密码为test123
 ![QQ截图20150815011901.png][1]</p>
 
@@ -63,28 +62,25 @@ windows2008 域控
 
 <p>然后到域成员win7这台机器上执行</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>gpupdate &amp;&amp; net user
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gpupdate &amp;&amp; net user
+</code></pre></div></div>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1994353166.png" alt="1994353166" /></p>
 
 <p>然后可以访问</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>\\tomato-dc\SYSVOL\tomato.com\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\MACHINE\Preferences\Groups
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>\\tomato-dc\SYSVOL\tomato.com\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\MACHINE\Preferences\Groups
+</code></pre></div></div>
 <p>这个目录下面有个group.xml文件</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code><span class="cp">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span>
 <span class="nt">&lt;Groups</span> <span class="na">clsid=</span><span class="s">"{3125E937-EB16-4b4c-9934-544FC6D24D26}"</span><span class="nt">&gt;&lt;User</span> <span class="na">clsid=</span><span class="s">"{DF5F1855-51E5-4d24-8B1A-D9BDE98BA1D1}"</span> <span class="na">name=</span><span class="s">"test"</span> <span class="na">image=</span><span class="s">"2"</span> <span class="na">changed=</span><span class="s">"2015-08-14 17:21:15"</span> <span class="na">uid=</span><span class="s">"{149655A8-CC7E-4A49-8A3C-403D1615AF63}"</span><span class="nt">&gt;&lt;Properties</span> <span class="na">action=</span><span class="s">"U"</span> <span class="na">newName=</span><span class="s">""</span> <span class="na">fullName=</span><span class="s">""</span> <span class="na">description=</span><span class="s">""</span> <span class="na">cpassword=</span><span class="s">"aUcBkzsNN7W1N3eM/JmKvw"</span> <span class="na">changeLogon=</span><span class="s">"1"</span> <span class="na">noChange=</span><span class="s">"0"</span> <span class="na">neverExpires=</span><span class="s">"0"</span> <span class="na">acctDisabled=</span><span class="s">"0"</span> <span class="na">userName=</span><span class="s">"test"</span><span class="nt">/&gt;&lt;/User&gt;</span>
 <span class="nt">&lt;/Groups&gt;</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>这里面存储着添加用户的账号密码。其中密码通过AES加密了，但是微软把解密的私钥写在了文档里面导致可以解密密码。
 除了这个地方存在账号密码，以下路径可能也存在</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Services\Services.xml 
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Services\Services.xml 
 
 ScheduledTasks\ScheduledTasks.xml 
 
@@ -93,8 +89,7 @@ Printers\Printers.xml
 Drives\Drives.xml
 
 DataSources\DataSources.xml
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>拿到加密密码之后，我们使用脚本解密</p>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2062133923.png" alt="2062133923" /></p>

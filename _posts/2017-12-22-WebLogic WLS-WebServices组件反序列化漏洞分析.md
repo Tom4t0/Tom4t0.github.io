@@ -1,7 +1,14 @@
-# WebLogic WLS-WebServices组件反序列化漏洞分析
-最近由于数字货币的疯涨，大量机器被入侵后用来挖矿，其中存在不少部署了Weblogic服务的机器，因为Weblogic最近所爆出安全漏洞的exploit在地下广泛流传。回到这个漏洞本身，其原因在于WLS-WebServices这个组件中，因为它使用了XMLDecoder来解析XML数据。有安全研究人员在去年八月份就向官方报告了此漏洞，Oralce官方在今年四月份提供了补丁程序。但是，四月份提供的补丁感觉是在敷衍了事，因此很快就被绕过了。为此官方又只能新发补丁，不过十月份所提供的补丁，检查还是比较严格。下面具体来看看此次反序列漏洞
+---
+layout: post
+title: WebLogic WLS-WebServices组件反序列化漏洞分析
+categories: vulnerability analysis
+tags: [vulnerability analysis]
+---
+
+最近由于数字货币的疯涨，大量机器被入侵后用来挖矿，其中存在不少部署了Weblogic服务的机器，因为Weblogic最近所爆出安全漏洞的exploit在地下广泛流传。回到这个漏洞本身，其原因在于WLS-WebServices这个组件中，因为它使用了XMLDecoder来解析XML数据。有安全研究人员在去年八月份就向官方报告了此漏洞，Oracle官方在今年四月份提供了补丁程序。但是，四月份提供的补丁感觉是在敷衍了事，因此很快就被绕过了。为此官方又只能新发补丁，不过十月份所提供的补丁，检查还是比较严格。下面具体来看看此次反序列漏洞
 ## 0x01漏洞复现
 测试环境 Weblogic 10.3.6.0/jdk1.6.0_45/Linux
+
 漏洞POC
 
 ```
@@ -69,7 +76,7 @@ weblogic.wsee.workarea.WorkContextXmlInputAdapter
 ![](http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139341082935.jpg)
 关于XMLDecoder的反序化问题13年就已经被人发现，近期再次被利用到Weblogic中由此可见JAVA生态圈中的安全问题是多么糟糕。值得一提的是此次漏洞出现了两处CVE编号，因为在Oracle官方在修复CVE-2017-3506所提供的patch只是简单的检查了XML中是否包含了<object>节点，然后将<object>换为<void>即可绕过此补丁。因此在修复过程中用户一定要使用Oracle官方十月份所提供的patch。
 
-##0x03漏洞防御
+## 0x03漏洞防御
 1. 临时解决方案
 根据业务所有需求，考虑是否删除WLS-WebServices组件。包含此组件路径为：
 
@@ -83,9 +90,10 @@ Middleware/wlserver_10.3/server/lib/wls-wsat.war
 以上路径都在WebLogic安装处。删除以上文件之后，需重启WebLogic。确认http://weblogic_ip/wls-wsat/ 是否为404页面。
 
 2. 官方补丁修复
-前往oralce官网下载10月份所提供的安全补丁。
+前往Oracle官网下载10月份所提供的安全补丁。
 
 ## 0x04 参考资料
 http://blog.diniscruz.com/2013/08/using-xmldecoder-to-execute-server-side.html
+
 https://github.com/pwntester/XMLDecoder
 

