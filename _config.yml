@@ -35,6 +35,9 @@ friends:
     - name: "Melody"
       url: "http://www.melodia.pw/"
       desc: "亚洲知名黑客"
+    - name: "pirogue"
+      url : "http://pirogue.org/"
+      desc: "反正是黑客"
 
 author:
     name: "Tomato"
