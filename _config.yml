@@ -32,6 +32,9 @@ friends:
     - name: "雨了个雨"
       url: "http://www.yulegeyu.com/"
       desc: "雨儿子"
+    - name: "Melody"
+      url: "http://www.melodia.pw/"
+      desc: "亚洲知名黑客"
 
 author:
     name: "Tomato"
