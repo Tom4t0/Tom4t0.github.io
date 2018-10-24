@@ -33,7 +33,7 @@ date: 2015-11-17 09:34:39
 ```
 <link rel="import" href="data:text/html;base64,PHNjcmlwdD5kZWxldGUgYWxlcnQ7YWxlcnQoIkhlbGxvIik7PC9zY3JpcHQ+">
 ```
-![xss-1.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1170534972.jpg)
+![xss-1.jpg](/old_img/2017-04-17-1170534972.jpg)
 
 查看页面的html源码发现
 
@@ -67,7 +67,8 @@ $.ajax({
 ```
 添加了一个帐号密码为tomato123的管理员
 访问admin.php拿到flag
-![xss－2.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-545225687.jpg)
+
+![xss－2.jpg](/old_img/2017-04-17-545225687.jpg)
 
 
 
@@ -76,15 +77,18 @@ $.ajax({
 
 注册一个aaa\然后在修改密码的页面可以发现报错
 
-![easysql-1.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2913177276.jpg)
+
+![easysql-1.jpg](/old_img/2017-04-17-2913177276.jpg)
 
 可以看到是双引号，这明显是一个二次注入，然后重新构造语句发现不能含有空格。但是这并不影响，直接用括号代替就行了。
 
-![easysql-2.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-157009057.jpg)
+
+![easysql-2.jpg](/old_img/2017-04-17-157009057.jpg)
 
 然后爆出一个flag表，查询提示说flag not here，然后去查users里面的列名发现
 
-![easysql－3.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3268258668.jpg)
+
+![easysql－3.jpg](/old_img/2017-04-17-3268258668.jpg)
 
 然后直接去查询里面的内容，发现只能出现RCTF这几个字符，然后就一直在纠结怎么查询，因为测试发现把substring left，right，reverse like 这些都拦截了。后面灵机一动想到了regexp。
 
@@ -93,15 +97,17 @@ username=tomato"||updatexml(0x7c,concat((select(real_flag_1s_here)from(users)whe
 ```
 然后成功搞定
 
-![easysql－4.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1387239513.jpg)
+
+![easysql－4.jpg](/old_img/2017-04-17-1387239513.jpg)
 
 
 **login**
 
 第二天给了提示说是nosql，那就猜是mongodb
-![login-1.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3330162428.jpg)
+![login-1.jpg](/old_img/2017-04-17-3330162428.jpg)
 
-那就开始跑密码了。![login－2.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3255963769.jpg)
+那就开始跑密码了。
+![login－2.jpg](/old_img/2017-04-17-3255963769.jpg)
 
 跑出的帐号密码为
 
@@ -109,11 +115,13 @@ username=tomato"||updatexml(0x7c,concat((select(real_flag_1s_here)from(users)whe
 ROIS_ADMIN  pas5woRd_i5_45e2884c4e5b9df49c747e1d
 ```
 然后登陆一发。
-![login-3.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-460039838.jpg)
+
+![login-3.jpg](/old_img/2017-04-17-460039838.jpg)
 
 下载备份文件，发现是一个php的解压zip的类，然后百度找到官方提供的，在diff一下
 
-![login-4.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1149569489.jpg)
+
+![login-4.jpg](/old_img/2017-04-17-1149569489.jpg)
 
 
 还在html源码里面发现
@@ -139,7 +147,8 @@ if (pbkdf2($alg, $Agent, $salt, $iterations, $keylen) != pbkdf2($alg, $backDoor,
 测试发现直接上传zip提示没有权限，然后只有过了上面三个条件才行。主要是第三个条件不好过，然后google一发
 pdkdf2 ctf 
 
-![2664205826](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2664205826.jpg)
+
+![2664205826](/old_img/2017-04-17-2664205826.jpg)
 
 找到了这个 PBKDF2+HMAC collision
 然后在https://mathiasbynens.be/notes/pbkdf2-hmac
@@ -152,16 +161,19 @@ rois_special_user_agentaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamipvkd
 ```
 然后改一下ua，在cookie里面添加backdoor就可以成功上传了。
 
-![2009859300](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2009859300.jpg)
+
+![2009859300](/old_img/2017-04-17-2009859300.jpg)
 
 按照解压出来的文件的命名规则为md5(文件名＋RoisFighting).文件的后缀
-但是访问http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/051ee28a1964f9f2779d32f2e48212cb/70d08f9380da3a6e0440b3266a2a39f6.php![2977300730](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2977300730.jpg)
+但是访问http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/051ee28a1964f9f2779d32f2e48212cb/70d08f9380da3a6e0440b3266a2a39f6.php
+![2977300730](/old_img/2017-04-17-2977300730.jpg)
 
 文件并不存在，测试发现在解压后会直接删除文件，所以我们可以尝试构造一个解压到上级目录的shell
 
 
 
-![login-7.jpg](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2977300730.jpg)
+
+![login-7.jpg](/old_img/2017-04-17-2977300730.jpg)
 
 shell地址就是
 http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/382aef24b11f8c5222bc58062a9bf5c7.php

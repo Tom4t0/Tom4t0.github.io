@@ -48,8 +48,8 @@ Content-Length: 777
   <soapenv:Body/> 
 </soapenv:Envelope>
 ```
-![](http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139326533815.jpg)
-![](http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139326768139.jpg)
+![](/old_img/2017-12-23-15139326533815.jpg)
+![](/old_img/2017-12-23-15139326768139.jpg)
 ## 0x02漏洞分析
 此次漏洞出现在wls-wsat.war中，此组件使用了weblogic自带的webservices处理程序来处理SOAP请求。然后在
 
@@ -69,11 +69,11 @@ weblogic.wsee.workarea.WorkContextXmlInputAdapter
 
 ```
 首先看到weblogic.wsee.jaxws.workcontext.WorkContextServerTube.processRequest方法
-![](http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139338809033.jpg)
+![](/old_img/2017-12-23-15139338809033.jpg)
 获取到localHeader1后传递给readHeaderOld方法，其内容为```<work:WorkContext>```所包裹的数据，然后继续跟进weblogic.wsee.jaxws.workcontext.WorkContextTube.readHeaderOld方法
-![](http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139340157538.jpg)
+![](/old_img/2017-12-23-15139340157538.jpg)
 在此方法中实例化了WorkContextXmlInputAdapter类，并且将获取到的XML格式的序列化数据传递到此类的构造方法中，最后通过XMLDecoder来进行反序列化操作。
-![](http://ogmho3r7t.bkt.clouddn.com/2017-12-23-15139341082935.jpg)
+![](/old_img/2017-12-23-15139341082935.jpg)
 关于XMLDecoder的反序化问题13年就已经被人发现，近期再次被利用到Weblogic中由此可见JAVA生态圈中的安全问题是多么糟糕。值得一提的是此次漏洞出现了两处CVE编号，因为在Oracle官方在修复CVE-2017-3506所提供的patch只是简单的检查了XML中是否包含了<object>节点，然后将<object>换为<void>即可绕过此补丁。因此在修复过程中用户一定要使用Oracle官方十月份所提供的patch。
 
 ## 0x03漏洞防御

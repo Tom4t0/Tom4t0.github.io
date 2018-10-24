@@ -83,8 +83,8 @@ dsquery computer
 net group "Domain Computers" /domain
 
 </code></pre></div></div>
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816910178725.jpg" alt="" />
-<img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816926950901.jpg" alt="" /></p>
+<p><img src="/old_img/2017-03-20-14816910178725.jpg" alt="" />
+<img src="/old_img/2017-03-20-14816926950901.jpg" alt="" /></p>
 
 <p>还可以通过powershell进行信息搜集,收集的信息包括域控机器，网段信息，域内服务列表。使用powershell的话，首先要绕过默认的安全策略，具体看文章<a href="https://blog.netspi.com/15-ways-to-bypass-the-powershell-execution-policy/">https://blog.netspi.com/15-ways-to-bypass-the-powershell-execution-policy/</a></p>
 
@@ -95,7 +95,7 @@ net group "Domain Computers" /domain
 域内服务信息收集，在域环境中其实无需做端口扫描。直接通过SPN进行信息收集，具体脚本</p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PowerShell-AD-Recon/blob/master/Discover-PSInterestingServices.ps1
 </code></pre></div></div>
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816932370016.jpg" alt="" /></p>
+<p><img src="/old_img/2017-03-20-14816932370016.jpg" alt="" /></p>
 
 <h4 id="0x02域内权限获取">0x02域内权限获取</h4>
 
@@ -113,7 +113,7 @@ net group "Domain Computers" /domain
 
 <p>4.steal token
 当你获取了本地计算机的system权限后，如果这台机器上有域用户跑的进程，就直接可以窃取域账号的token，然后从本地用户组跨入域环境。如果这台机器上有域管的开的进程，那么直接steal token后就可以登录域控了。
-<img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816940742419.jpg" alt="" /></p>
+<img src="/old_img/2017-03-20-14816940742419.jpg" alt="" /></p>
 
 <p>5.远程执行命令方法</p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>copy muma.exe \\host\c$\windows\temp\foobar.exe ##IPC拷贝木马文件
@@ -144,7 +144,7 @@ sc \\host delete foobar ##完事后删除服务
 
 </code></pre></div></div>
 <p>PTH+compmgmt.msc
-<img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816949000256.png" alt="" /></p>
+<img src="/old_img/2017-03-20-14816949000256.png" alt="" /></p>
 
 <p>smb+MOF</p>
 
@@ -249,7 +249,7 @@ krbgt ntml hash   mimikatz “@lsadump::dcsync /domain:域完整名称 /user:krb
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mimikatz keberos::ptt ESRINEA.LOCAL.kirbi
 </code></pre></div></div>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14817917650651.png" alt="" /></p>
+<p><img src="/old_img/2017-03-20-14817917650651.png" alt="" /></p>
 
 <ol>
   <li>mimikatz Skeleton Key SSP
@@ -278,11 +278,11 @@ Skeleton Key被安装在64位的域控服务器上，支持Windows Server2003—
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./Responder.py -I eth0 -rPv
 </code></pre></div></div>
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14816996917145.jpg" alt="" /></p>
+<p><img src="/old_img/2017-03-20-14816996917145.jpg" alt="" /></p>
 
 <p>SMBRelay Attack</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-03-20-14817720462479.jpg" alt="" />
+<p><img src="/old_img/2017-03-20-14817720462479.jpg" alt="" />
 impacket</p>
 
 <h3 id="cobaltstrike工具免杀">cobaltstrike工具免杀</h3>

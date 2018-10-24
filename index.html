@@ -7,7 +7,7 @@ title: "Home"
   <div class="lp-archvies">
     <div class="lp-archives-list">
       <ul>
-        {% for post in paginator.posts reverse %}
+        {% for post in paginator.posts %}
         {% if post.layout == "post" %}
         <li>
           <h3>

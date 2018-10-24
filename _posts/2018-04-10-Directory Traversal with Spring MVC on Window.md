@@ -33,9 +33,9 @@ registry.addResourceHandler("/resources/**").addResourceLocations("http://www.re
 registry.addResourceHandler("/resources/**").addResourceLocations("file:///D:/static/","/resources/");
 ```
 当前漏洞环境在D盘，我在D盘根目录创建一个123.txt，通过下面的URL即可访问。 [http://127.0.0.1:8080/spring-mvc-showcase/resources/xxxx/..%5c/..%5c/..%5c/123.txt](http://127.0.0.1:8080/spring-mvc-showcase/resources/xxxx/..%5c/..%5c/..%5c/123.txt)
-![21-48-47](http://ogmho3r7t.bkt.clouddn.com/2018-04-11-21-48-47.jpg)
+![21-48-47](/old_img/2018-04-11-21-48-47.jpg)
 漏洞只能在windows上存在原因是因为为在```org/springframework/web/servlet/resource/ResourceHttpRequestHandler```中的```String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);```会将URL中的```..%2f```去除,然后在Windows中能通过..\的方式来跳目录。然后不支持Tomcat的原因为在默认情况下Tomcat遇到包含%2f(\) %5c(/)的URL直接http 400，若需要处理此类型的URL 则需要在tomcat配置文件中添加```Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true```   Spring Framework处理资源文件的整个流程如下图：
-![21-43-23](http://ogmho3r7t.bkt.clouddn.com/2018-04-11-21-43-23.jpg)
+![21-43-23](/old_img/2018-04-11-21-43-23.jpg)
 
 在经过一系列判断之后在```org/springframework/util/ResourceUtils```中的```getFile```方法读取了文件。值得注意的是在虽然在存在URL检查中存在如下代码
 ```
@@ -46,7 +46,8 @@ if (path.contains("WEB-INF") || path.contains("META-INF")) {
 			return true;
 ```
 但是在Windows平台下是不会区分大小写的，所以还是可以读取配置文件。但是如何构造URL得看在配置资源文件中设置的location是在何处了。
-![22-07-52](http://ogmho3r7t.bkt.clouddn.com/2018-04-11-22-07-52.jpg)
+
+![22-07-52](/old_img/2018-04-11-22-07-52.jpg)
 官方修复方式是在```CheckResource```方法中添加了如下过滤
 ```
 protected String processPath(String path) {

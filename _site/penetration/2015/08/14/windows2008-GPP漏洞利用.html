@@ -49,23 +49,23 @@ windows2008 域控
 <p>首先部署GPP，这里我部署的策略是给域成员都添加一个test用户，密码为test123
 ![QQ截图20150815011901.png][1]</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-493775859.png" alt="493775859" /></p>
+<p><img src="/old_img/2017-04-17-493775859.png" alt="493775859" /></p>
 
 <p>添加一个本地用户
-<img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3035697488.png" alt="3035697488" />
+<img src="/old_img/2017-04-17-3035697488.png" alt="3035697488" />
 然后来到组策略管理</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1117809806.png" alt="1117809806" />
+<p><img src="/old_img/2017-04-17-1117809806.png" alt="1117809806" />
 将domain computers 添加到验证组策略对象</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2121700627.png" alt="2121700627" /></p>
+<p><img src="/old_img/2017-04-17-2121700627.png" alt="2121700627" /></p>
 
 <p>然后到域成员win7这台机器上执行</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gpupdate &amp;&amp; net user
 </code></pre></div></div>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1994353166.png" alt="1994353166" /></p>
+<p><img src="/old_img/2017-04-17-1994353166.png" alt="1994353166" /></p>
 
 <p>然后可以访问</p>
 
@@ -92,7 +92,7 @@ DataSources\DataSources.xml
 </code></pre></div></div>
 <p>拿到加密密码之后，我们使用脚本解密</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2062133923.png" alt="2062133923" /></p>
+<p><img src="/old_img/2017-04-17-2062133923.png" alt="2062133923" /></p>
 
 <p>或者使用powershell脚本</p>
 

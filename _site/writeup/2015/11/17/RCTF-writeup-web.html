@@ -63,8 +63,7 @@
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;link rel="import" href="data:text/html;base64,PHNjcmlwdD5kZWxldGUgYWxlcnQ7YWxlcnQoIkhlbGxvIik7PC9zY3JpcHQ+"&gt;
 </code></pre></div></div>
-
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1170534972.jpg" alt="xss-1.jpg" /></p>
+<p><img src="/old_img/2017-04-17-1170534972.jpg" alt="xss-1.jpg" /></p>
 
 <p>查看页面的html源码发现</p>
 
@@ -96,21 +95,21 @@ password:&lt;input type="password" name="pass"&gt;&lt;br /&gt;
 <p>添加了一个帐号密码为tomato123的管理员
 访问admin.php拿到flag</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-545225687.jpg" alt="xss－2.jpg" /></p>
+<p><img src="/old_img/2017-04-17-545225687.jpg" alt="xss－2.jpg" /></p>
 
 <p><strong>easysql</strong></p>
 
 <p>注册一个aaa\然后在修改密码的页面可以发现报错</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2913177276.jpg" alt="easysql-1.jpg" /></p>
+<p><img src="/old_img/2017-04-17-2913177276.jpg" alt="easysql-1.jpg" /></p>
 
 <p>可以看到是双引号，这明显是一个二次注入，然后重新构造语句发现不能含有空格。但是这并不影响，直接用括号代替就行了。</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-157009057.jpg" alt="easysql-2.jpg" /></p>
+<p><img src="/old_img/2017-04-17-157009057.jpg" alt="easysql-2.jpg" /></p>
 
 <p>然后爆出一个flag表，查询提示说flag not here，然后去查users里面的列名发现</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3268258668.jpg" alt="easysql－3.jpg" /></p>
+<p><img src="/old_img/2017-04-17-3268258668.jpg" alt="easysql－3.jpg" /></p>
 
 <p>然后直接去查询里面的内容，发现只能出现RCTF这几个字符，然后就一直在纠结怎么查询，因为测试发现把substring left，right，reverse like 这些都拦截了。后面灵机一动想到了regexp。</p>
 
@@ -118,16 +117,15 @@ password:&lt;input type="password" name="pass"&gt;&lt;br /&gt;
 </code></pre></div></div>
 <p>然后成功搞定</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1387239513.jpg" alt="easysql－4.jpg" /></p>
+<p><img src="/old_img/2017-04-17-1387239513.jpg" alt="easysql－4.jpg" /></p>
 
 <p><strong>login</strong></p>
 
-<p>第二天给了提示说是nosql，那就猜是mongodb</p>
-
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3330162428.jpg" alt="login-1.jpg" /></p>
+<p>第二天给了提示说是nosql，那就猜是mongodb
+<img src="/old_img/2017-04-17-3330162428.jpg" alt="login-1.jpg" /></p>
 
 <p>那就开始跑密码了。
-<img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-3255963769.jpg" alt="login－2.jpg" /></p>
+<img src="/old_img/2017-04-17-3255963769.jpg" alt="login－2.jpg" /></p>
 
 <p>跑出的帐号密码为</p>
 
@@ -135,11 +133,11 @@ password:&lt;input type="password" name="pass"&gt;&lt;br /&gt;
 </code></pre></div></div>
 <p>然后登陆一发。</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-460039838.jpg" alt="login-3.jpg" /></p>
+<p><img src="/old_img/2017-04-17-460039838.jpg" alt="login-3.jpg" /></p>
 
 <p>下载备份文件，发现是一个php的解压zip的类，然后百度找到官方提供的，在diff一下</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-1149569489.jpg" alt="login-4.jpg" /></p>
+<p><img src="/old_img/2017-04-17-1149569489.jpg" alt="login-4.jpg" /></p>
 
 <p>还在html源码里面发现</p>
 
@@ -163,7 +161,7 @@ password:&lt;input type="password" name="pass"&gt;&lt;br /&gt;
 <p>测试发现直接上传zip提示没有权限，然后只有过了上面三个条件才行。主要是第三个条件不好过，然后google一发
 pdkdf2 ctf</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2664205826.jpg" alt="2664205826" /></p>
+<p><img src="/old_img/2017-04-17-2664205826.jpg" alt="2664205826" /></p>
 
 <p>找到了这个 PBKDF2+HMAC collision
 然后在https://mathiasbynens.be/notes/pbkdf2-hmac
@@ -175,15 +173,15 @@ pdkdf2 ctf</p>
 </code></pre></div></div>
 <p>然后改一下ua，在cookie里面添加backdoor就可以成功上传了。</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2009859300.jpg" alt="2009859300" /></p>
+<p><img src="/old_img/2017-04-17-2009859300.jpg" alt="2009859300" /></p>
 
 <p>按照解压出来的文件的命名规则为md5(文件名＋RoisFighting).文件的后缀
 但是访问http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/051ee28a1964f9f2779d32f2e48212cb/70d08f9380da3a6e0440b3266a2a39f6.php
-<img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2977300730.jpg" alt="2977300730" /></p>
+<img src="/old_img/2017-04-17-2977300730.jpg" alt="2977300730" /></p>
 
 <p>文件并不存在，测试发现在解压后会直接删除文件，所以我们可以尝试构造一个解压到上级目录的shell</p>
 
-<p><img src="http://ogmho3r7t.bkt.clouddn.com/2017-04-17-2977300730.jpg" alt="login-7.jpg" /></p>
+<p><img src="/old_img/2017-04-17-2977300730.jpg" alt="login-7.jpg" /></p>
 
 <p>shell地址就是
 http://180.76.178.54:8005/53a0fb1b692f02436c3b5dda1db9c361/upload/image/382aef24b11f8c5222bc58062a9bf5c7.php</p>
