@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>JNDI Injection Bypass</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/public/img/head.png">
+  <link rel="stylesheet" href="/public/css/amazeui.min.css">
+  <link rel="stylesheet" href="/public/css/app.css">
+  <link rel="stylesheet" href="/public/css/highlight-js/github.css">
+</head>
+<body>
+
+<div class="am-container lp-container">
+  <header class="am-topbar lp-topbar">
+    <h1 class="am-topbar-brand">
+      <a href="/">Tomato's Blog</a>
+    </h1>
+    <button class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-danger am-show-sm-only" data-am-collapse="{target: '#lp-topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></button>
+    <div class="am-collapse am-topbar-collapse am-topbar-right" id="lp-topbar-collapse">
+      <ul class="am-nav am-nav-pills am-topbar-nav">
+        <li><a href="/">Archives</a></li>
+        <!-- <li><a href="#">Categories</a></li> -->
+        <li><a href="/friends.html">Friends</a></li>
+        <!-- <li><a href="#">About Me</a></li> -->
+        <li><a href="/feed.xml">Feed</a></li>
+      </ul>
+    </div>
+  </header>
+</div>
+
+
+<div class="am-container lp-container">
+  <div class="lp-post">
+    <div class="lp-post-header">
+      <h1 class="lp-post-title">JNDI Injection Bypass</h1>
+      <div class="lp-post-meta">
+        <i class="am-icon-calculator"></i><span class="lp-post-date">2019-01-04</span>
+        <i class="am-icon-tags"></i><span class="lp-post-tags">tricks, java</span>
+      </div>
+    </div>
+    <div class="lp-post-content">
+    <h4 id="背景">背景</h4>
+
+<p>Oracle在jdk8u121之后设置了com.sun.jndi.rmi.object.trustURLCodebase为 false，限制了 RMI 利用方式中从远程加载 Class
+com.sun.jndi.rmi.registry.RegistryContext#decodeObject</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">private</span> <span class="n">Object</span> <span class="nf">decodeObject</span><span class="o">(</span><span class="n">Remote</span> <span class="n">var1</span><span class="o">,</span> <span class="n">Name</span> <span class="n">var2</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">NamingException</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">Object</span> <span class="n">var3</span> <span class="o">=</span> <span class="n">var1</span> <span class="k">instanceof</span> <span class="n">RemoteReference</span> <span class="o">?</span> <span class="o">((</span><span class="n">RemoteReference</span><span class="o">)</span><span class="n">var1</span><span class="o">).</span><span class="na">getReference</span><span class="o">()</span> <span class="o">:</span> <span class="n">var1</span><span class="o">;</span>
+            <span class="n">Reference</span> <span class="n">var8</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">var3</span> <span class="k">instanceof</span> <span class="n">Reference</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">var8</span> <span class="o">=</span> <span class="o">(</span><span class="n">Reference</span><span class="o">)</span><span class="n">var3</span><span class="o">;</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">var3</span> <span class="k">instanceof</span> <span class="n">Referenceable</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">var8</span> <span class="o">=</span> <span class="o">((</span><span class="n">Referenceable</span><span class="o">)((</span><span class="n">Referenceable</span><span class="o">)</span><span class="n">var3</span><span class="o">)).</span><span class="na">getReference</span><span class="o">();</span>
+            <span class="o">}</span>
+
+            <span class="k">if</span> <span class="o">(</span><span class="n">var8</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">var8</span><span class="o">.</span><span class="na">getFactoryClassLocation</span><span class="o">()</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">trustURLCodebase</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">throw</span> <span class="k">new</span> <span class="nf">ConfigurationException</span><span class="o">(</span><span class="s">"The object factory is untrusted. Set the system property 'com.sun.jndi.rmi.object.trustURLCodebase' to 'true'."</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                <span class="k">return</span> <span class="n">NamingManager</span><span class="o">.</span><span class="na">getObjectInstance</span><span class="o">(</span><span class="n">var3</span><span class="o">,</span> <span class="n">var2</span><span class="o">,</span> <span class="k">this</span><span class="o">,</span> <span class="k">this</span><span class="o">.</span><span class="na">environment</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">NamingException</span> <span class="n">var5</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="n">var5</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">RemoteException</span> <span class="n">var6</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="o">(</span><span class="n">NamingException</span><span class="o">)</span><span class="n">wrapRemoteException</span><span class="o">(</span><span class="n">var6</span><span class="o">).</span><span class="na">fillInStackTrace</span><span class="o">();</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">var7</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">NamingException</span> <span class="n">var4</span> <span class="o">=</span> <span class="k">new</span> <span class="n">NamingException</span><span class="o">();</span>
+            <span class="n">var4</span><span class="o">.</span><span class="na">setRootCause</span><span class="o">(</span><span class="n">var7</span><span class="o">);</span>
+            <span class="k">throw</span> <span class="n">var4</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>Oracle在jdk8u191之后设置了com.sun.jndi.ldap.object.trustURLCodebase为 false,限制了LDAP 利用是从远程加载 Class</p>
+
+<p>com.sun.jndi.ldap.VersionHelper12#loadClass</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="n">ClassLoader</span> <span class="nf">getURLClassLoader</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">var1</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">MalformedURLException</span> <span class="o">{</span>
+        <span class="n">ClassLoader</span> <span class="n">var2</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getContextClassLoader</span><span class="o">();</span>
+        <span class="k">return</span> <span class="o">(</span><span class="n">ClassLoader</span><span class="o">)(</span><span class="n">var1</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="s">"true"</span><span class="o">.</span><span class="na">equalsIgnoreCase</span><span class="o">(</span><span class="n">trustURLCodebase</span><span class="o">)</span> <span class="o">?</span> <span class="n">URLClassLoader</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="n">getUrlArray</span><span class="o">(</span><span class="n">var1</span><span class="o">),</span> <span class="n">var2</span><span class="o">)</span> <span class="o">:</span> <span class="n">var2</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">loadClass</span><span class="o">(</span><span class="n">String</span> <span class="n">var1</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ClassNotFoundException</span> <span class="o">{</span>
+        <span class="n">ClassLoader</span> <span class="n">var2</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getContextClassLoader</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">Class</span><span class="o">.</span><span class="na">forName</span><span class="o">(</span><span class="n">var1</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="n">var2</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="绕过">绕过</h4>
+
+<p>针对 RMI 利用的检查方式中最关键的就是 <code class="highlighter-rouge">if (var8 != null &amp;&amp; var8.getFactoryClassLocation() != null &amp;&amp; !trustURLCodebase)</code> 如果 FactoryClassLocation 为空，那么就会进入 <code class="highlighter-rouge">NamingManager.getObjectInstance</code> 在此方法会调用 Reference 中的ObjectFactory。因此绕过思路为在目标 classpath 中寻找实现 ObjectFactory 接口的类。在 Tomcat 中有一处可以利用的符合条件的类<code class="highlighter-rouge">org.apache.naming.factory.BeanFactory</code> 在此类中会获取 Reference 中的<code class="highlighter-rouge">forceString</code>
+得到其中的值之后会判断是否包含等号，如果包含则用等号分割，将前一半当做方法名，后一半当做 Hashmap 中的 key。如果不包含等号则方法名变成 set开头。值得注意的是此方法中已经指定了参数类型为 String。后面将会利用反射执行前面所提到的方法。因此需要找到使用了 String 作为参数，并且能 RCE的方法。在<code class="highlighter-rouge">javax.el.ELProcessor</code> 中的 eval 方法就很合适</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> public Object eval(String expression) {
+        return this.getValue(expression, Object.class);
+    }
+</code></pre></div></div>
+
+<p><img src="/old_img/JNDI-Injection-Demo.gif" alt="Demo" /></p>
+
+<h4 id="参考">参考</h4>
+<p>https://www.veracode.com/blog/research/exploiting-jndi-injections-java</p>
+
+    </div>
+    
+    <div id="disqus_thread"></div>
+<script type="text/javascript">
+var disqus_shortname = "tomatos-blog";
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div>
+</div>
+
+<div class="am-container lp-container">
+  <footer class="am-footer lp-footer">
+    <p>Copyright © 2014-2017 All Rights Reserved</p>
+    <p>Theme By <a href="https://github.com/RickGray/light-post">LightPost</a></p>
+  </afooter>
+</div>
+
+
+<div data-am-widget="gotop" class="am-gotop am-gotop-fixed">
+  <a href="#top" title="回到顶部">
+    <span class="am-gotop-title">GoTop</span>
+    <i class="am-gotop-icon am-icon-chevron-up"></i>
+  </a>
+</div>
+
+<script src="/public/js/jquery.min.js"></script>
+<script src="/public/js/amazeui.min.js"></script>
+<script>
+$(document).ready(function(){
+  $.AMUI.progress.start();
+});
+$(window).load(function(){
+  $.AMUI.progress.done();
+});
+</script>
+<script src="/public/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- 网站统计代码 -->
+<div hidden>
+<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1256394309'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1256394309%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+<div hidden>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?b8f48a0cd4b04ec22678a4cd23fcb9dd";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</div>
+</body>
+</html>
