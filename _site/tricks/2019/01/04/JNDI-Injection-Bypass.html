@@ -74,16 +74,19 @@ com.sun.jndi.rmi.registry.RegistryContext#decodeObject</p>
 
 <p>Oracle在jdk8u191之后设置了com.sun.jndi.ldap.object.trustURLCodebase为 false,限制了LDAP 利用是从远程加载 Class</p>
 
-<p>com.sun.jndi.ldap.VersionHelper12#loadClass</p>
+<p>com.sun.naming.internal.VersionHelper12#loadClass(java.lang.String, java.lang.String)</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="n">ClassLoader</span> <span class="nf">getURLClassLoader</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">var1</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">MalformedURLException</span> <span class="o">{</span>
-        <span class="n">ClassLoader</span> <span class="n">var2</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getContextClassLoader</span><span class="o">();</span>
-        <span class="k">return</span> <span class="o">(</span><span class="n">ClassLoader</span><span class="o">)(</span><span class="n">var1</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="s">"true"</span><span class="o">.</span><span class="na">equalsIgnoreCase</span><span class="o">(</span><span class="n">trustURLCodebase</span><span class="o">)</span> <span class="o">?</span> <span class="n">URLClassLoader</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="n">getUrlArray</span><span class="o">(</span><span class="n">var1</span><span class="o">),</span> <span class="n">var2</span><span class="o">)</span> <span class="o">:</span> <span class="n">var2</span><span class="o">);</span>
-    <span class="o">}</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">public</span> <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">loadClass</span><span class="o">(</span><span class="n">String</span> <span class="n">className</span><span class="o">,</span> <span class="n">String</span> <span class="n">codebase</span><span class="o">)</span>
+            <span class="kd">throws</span> <span class="n">ClassNotFoundException</span><span class="o">,</span> <span class="n">MalformedURLException</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="s">"true"</span><span class="o">.</span><span class="na">equalsIgnoreCase</span><span class="o">(</span><span class="n">trustURLCodebase</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">ClassLoader</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">getContextClassLoader</span><span class="o">();</span>
+            <span class="n">ClassLoader</span> <span class="n">cl</span> <span class="o">=</span>
+                    <span class="n">URLClassLoader</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="n">getUrlArray</span><span class="o">(</span><span class="n">codebase</span><span class="o">),</span> <span class="n">parent</span><span class="o">);</span>
 
-    <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">loadClass</span><span class="o">(</span><span class="n">String</span> <span class="n">var1</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ClassNotFoundException</span> <span class="o">{</span>
-        <span class="n">ClassLoader</span> <span class="n">var2</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getContextClassLoader</span><span class="o">();</span>
-        <span class="k">return</span> <span class="n">Class</span><span class="o">.</span><span class="na">forName</span><span class="o">(</span><span class="n">var1</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="n">var2</span><span class="o">);</span>
+            <span class="k">return</span> <span class="nf">loadClass</span><span class="o">(</span><span class="n">className</span><span class="o">,</span> <span class="n">cl</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="o">}</span>
     <span class="o">}</span>
 </code></pre></div></div>
 

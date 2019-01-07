@@ -39,17 +39,20 @@ com.sun.jndi.rmi.registry.RegistryContext#decodeObject
 
 Oracle在jdk8u191之后设置了com.sun.jndi.ldap.object.trustURLCodebase为 false,限制了LDAP 利用是从远程加载 Class
 
-com.sun.jndi.ldap.VersionHelper12#loadClass
+com.sun.naming.internal.VersionHelper12#loadClass(java.lang.String, java.lang.String)
 
 ```java
-    ClassLoader getURLClassLoader(String[] var1) throws MalformedURLException {
-        ClassLoader var2 = this.getContextClassLoader();
-        return (ClassLoader)(var1 != null && "true".equalsIgnoreCase(trustURLCodebase) ? URLClassLoader.newInstance(getUrlArray(var1), var2) : var2);
-    }
+    public Class<?> loadClass(String className, String codebase)
+            throws ClassNotFoundException, MalformedURLException {
+        if ("true".equalsIgnoreCase(trustURLCodebase)) {
+            ClassLoader parent = getContextClassLoader();
+            ClassLoader cl =
+                    URLClassLoader.newInstance(getUrlArray(codebase), parent);
 
-    Class<?> loadClass(String var1) throws ClassNotFoundException {
-        ClassLoader var2 = this.getContextClassLoader();
-        return Class.forName(var1, true, var2);
+            return loadClass(className, cl);
+        } else {
+            return null;
+        }
     }
 ```
 
